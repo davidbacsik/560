@@ -82,4 +82,8 @@ I'd like to see if there are broad trends to mutation to a specific amino acid. 
 
 ```{r}
 
-aa_list = c()
+aa_list = c('G','A','L','M','F','W','K','Q','E','S','P','V','I','C','Y','H','R','N','D','T')
+
+
+
+```
