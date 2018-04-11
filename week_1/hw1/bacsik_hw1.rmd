@@ -1,22 +1,19 @@
 ---
-title: "560_hw_1"
+title: "560 HW #1"
 author: "David Bacsik"
 date: "April 10, 2018"
+
 output: html_document
 ---
+### *due date: Thursday, April 12, 2018*
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-
-# 560, HW #1
-## David Bacsik
-## April 12, 2018
-
-## Part 1
-### 1.1a
-Load the master data file and select the data I want from it.
+### Part 1
+#### 1.1a
+Load the master data file and select the data I want from it. I am going to use the ww_data we used in the lab.
 
 ```{r}
 master_data = read.table(file="560_dataset_reduced.txt", header = T, sep = '\t')
@@ -28,33 +25,61 @@ ww_data = master_data[which(master_data$dms_id == 'WW_domain'),]
 head(ww_data)
 ```
 
-### 1.1b
+#### 1.1b
 Now, I want to calculate some summary statistics about the functional scores of each variant.
 
 ```{r}
 func_scores = ww_data$reported_effect
 
-print('The range of functional scores is:')
-print(range(func_scores))
 
-print('The mean of functional scores is:')
-print(mean(func_scores))
+fs.range = range(func_scores)
 
-print('The variance of functional scores is:')
-print(var(func_scores))
+fs.mean = mean(func_scores)
 
-print('The standard deviation of functional scores is:')
-print(sd(func_scores))
+fs.var = var(func_scores)
 
-print('Quantile Values:')
-print(quantile(func_scores, probs=c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)))
+fs.sd = sd(func_scores)
+
+quant_list = c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)
+fs.quants = quantile(func_scores, probs=quant_list)
 ```
+
+The range of functional scores is: `r fs.range`
+
+The mean of functional scores is: `r fs.mean`
+
+The variance of functional scores is: `r fs.var`
+
+The standard deviation of functional scores is: `r fs.sd`
+
+Quantiles:
+
+```{r} 
+print(fs.quants)
+```
+
+Are the 25% and 75% quantiles approximately .67 sd from the mean?'
 
 ```{r}
-print('Are the 25% and 75% quantiles approximately .67 sd from the mean?')
-print('Approx 25%:')
-print(mean(func_scores)-0.67448*sd(func_scores))
-print('Approx 75%:')
-print(mean(func_scores)+0.67488*sd(func_scores))
-print('Yes, these data are approximately normally distributed.')
+approx_25 = mean(func_scores)-0.67448*sd(func_scores)
+approx_75 = mean(func_scores)+0.67488*sd(func_scores)
 ```
+
+In a normal distribution, the 25th percentile would be approximately `r approx_25`, and in our data it is approximately `r quantile(func_scores, probs=c(0.25))`. The 75th percentile woudl be approximately `r approx_75`, and in our data it is approximately `r quantile(func_scores, probs=c(0.75))`.
+
+These numbers are pretty close, so based on this, I conclude that our data are approximately normally distributed.
+
+#### 1.1c
+I want to visualize the distribution of our data. To do this, I will make a histogram of the functional scores with 50 bins.
+
+```{r}
+
+hist(func_scores, 50, freq=TRUE, main='WW DMS Functional Scores', xlab='Score', ylab='Frequency')
+```
+
+#### 1.1d
+I'd like to see if there are broad trends to mutation to a specific amino acid. For each of the 20 amino acids, I will calculate the mean effect of mutation to that amino acid.
+
+```{r}
+
+aa_list = c()
