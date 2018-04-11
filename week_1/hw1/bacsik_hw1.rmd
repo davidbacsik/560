@@ -82,8 +82,53 @@ I'd like to see if there are broad trends to mutation to a specific amino acid. 
 
 ```{r}
 
-aa_list = c('G','A','L','M','F','W','K','Q','E','S','P','V','I','C','Y','H','R','N','D','T')
+effect_by_aa.mean = tapply(ww_data$reported_effect, ww_data$aa2, mean)
 
-
+effect_by_aa.mean
 
 ```
+
+#### 1.1e
+Now I will plot these data on a barplot.
+
+```{r}
+
+barplot(effect_by_aa.mean, main = 'WW DMS Substituted Amino Acids', xlab = 'Amino Acid', ylab = 'Mean Functional Score', cex.names=0.8)
+
+```
+
+#### 1.1f
+Focusing just on stop codons, alaline, and tryptophan, I will plot the distribution of functional scores for each of these amino acid substitutions.
+
+```{r}
+
+effect_by_aa = split(ww_data$reported_effect, ww_data$aa2)
+
+sub = c(effect_by_aa['X'], effect_by_aa['A'], effect_by_aa['W'])
+
+boxplot(sub, main = 'WW DMS Substituted Amino Acids', names = c('Stop','Alanine','Tryptophan'), xlab= 'Amino Acid', ylab='Functional Scores')
+```
+
+#### 1.1g
+Now, I would like to see how the above distributions of scores compares to a random sampling of scores.
+
+First, I will pool all the scores for these three codons. Then, I will generate a random sample of the same size. Finally, I will see if the real scores trend above, below, or similarly to the randmon sampling to determine whether they are random or not.
+
+Because I am randomly sampling, and I want this to be repeatable, I will set the seed for this chunk of code at 1.
+
+```{r}
+set.seed(1)
+
+combined_scores = unlist(c(effect_by_aa['X'], effect_by_aa['A'], effect_by_aa['W']), use.names=FALSE)
+
+random_sample.x = sample(combined_scores, length(unlist(effect_by_aa['X'])))
+random_sample.a = sample(combined_scores, length(unlist(effect_by_aa['A'])))
+random_sample.w = sample(combined_scores, length(unlist(effect_by_aa['W'])))
+random_sample = list(X = random_sample.x, A = random_sample.a, W = random_sample.w)
+
+boxplot(random_sample, main = 'WW DMS Randomized Amino Acid Substitution', names = c('Randomized Stop','Random Alanine','Randomized Tryptophan'), xlab= 'Amino Acid (Randomized)', ylab='Randomized Functional Scores')
+```
+
+The random distribution is pretty uniform, while the real data lie above (maybe) and below (certainly) the uniform distribtion. I am conlcuding that stop codon substituions have a real, negative effect on function; alanine and tryptophan substitutions may be slightly less deleterious than a random substitution.
+
+### Part 2
