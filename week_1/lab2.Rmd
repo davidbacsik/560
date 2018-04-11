@@ -1,0 +1,82 @@
+---
+title: "week1_lab2"
+author: "db"
+date: "March 29, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Week 1, Lab 2
+
+This is the second lab of week 1. Focused on R Markdown files.
+
+```{r}
+ww_data = read.table(file="560_ww_data.txt", header = T, sep = '\t')
+```
+
+Get some summary info about this dataset. str: (all variables, number of observations)
+```{r}
+str(ww_data)
+```
+
+Get some summary info about this dataset. head: (first 10 rows or so)
+```{r}
+head(ww_data)
+```
+
+Get some summary info about this dataset. names: (all column names)
+```{r}
+names(ww_data)
+```
+
+## Descriptive statistics
+Now, let's get some summary stats on this data.
+For a broad overview of expression for each feature in the data set we can use the summary() function
+
+```{r}
+summary(ww_data)
+```
+
+We can also have a look at the first row of the master data frame (e.g. the first mutation):
+```{r}
+ww_data[1,]
+```
+
+Let's extract the data for the functional scores.
+
+Subsetting and data types can be tricky in R. Here, we want to use the numeric values for calculations, so we use as.vector() with the parameter mode=“numeric” to get a vector of numbers.
+
+Then, use is to get the variable type and verify we've created what we expected.
+
+```{r}
+ps1 = as.vector(ww_data$reported_effect, mode='numeric')
+
+is(ps1)
+```
+
+Now, let's do some calculations on the functional score.
+First, let's find the average, range, and standard deviation.
+```{r}
+ps1.mean = mean(ps1)
+ps1.range = range(ps1)
+ps1.sd = sd(ps1)
+
+ps1.mean
+ps1.range
+ps1.sd
+```
+
+Also, we can subset the data on conditionals for filtering.
+Let's collect the functional effect for for just mutations to alanine or just tryptophan, and calculate some summary stats.
+
+```{r}
+just_ala = ww_data[which(ww_data$aa2 == 'A'),]$reported_effect
+mean(just_ala)
+
+just_trp = ww_data[which(ww_data$aa2 == 'W'),]$reported_effect
+mean(just_trp)
+```
+

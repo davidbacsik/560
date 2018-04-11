@@ -1,0 +1,78 @@
+---
+title: "560 Lecture 4 - Confidence intervals and user-defined functions"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## First, a brief primer on user-defined functions in R.  
+Functions are part of a program/script that perform a specific action but are not, in themselves, a complete program/script.  They take parameters/arguments, do something with them and then return the result.  They can be thought of as a way of organizing/modularizing code.  In R, they take the general form:
+
+myfunction = function(arg1, arg2, ...){
+statments
+return(object)
+}
+
+Note -- generally you put statements inside the curly braces that define the body of the function.  Each line of the function can be separated with either a carriage return or a semicolons.  Semicolons are useful if you want to write a short function in R shell.  Carriage returns look nicer in scripts. The last line of a function is often return(...) which passes whatever is inside back to the R shell/running script. 
+
+#### Here is a simple example:
+```{r}
+add2numbers = function(num1, num2){
+sum = num1 + num2
+return(sum)
+}
+
+add2numbers(1, 2)
+```
+
+#### Functions can be nested, that is, functions can call other functions. Here is an example:
+```{r}
+plot.sum = function(num1, num2) {
+values = c(num1, num2, add2numbers(num1, num2))
+barplot(values, names.arg= c("num1", "num2", "sum"))
+}
+
+plot.sum(1, 5)
+```
+
+#### If you are writing a complex function in R, you can sanity check your arguments to make sure they are sensible.  stopifnot() is a convenient way to do this. Let's redefine add2numbers so that it checks to make sure the arguments are reals.
+```{r, eval = FALSE}
+add2numbers("a", 5)
+
+add2numbers <- function(num1, num2){
+stopifnot(is.double(num1), is.double(num2))
+sum = num1 + num2
+return(sum)
+}
+
+add2numbers(1, 5)
+add2numbers("a", 5)
+```
+
+#### Notice that Rstudio pulls you into a debugger when stopifnot() is TRUE.  R has powerful debugging tools (traceback() and debug()).  Other programming languages have these too, so learn how to use them if you are writing complex code.
+
+####A few further general observations for coding (and Ring):
+1.  Comment your code
+2.  RTFM before you rely on whatever nifty package/code from your buddy/etc
+3.  Start from the beginning and break the task into meaningful steps.  Then, write.
+4.  Use names that mean something.  "foo" "ass" or "a" are not informative...
+5.  Test (using simulated data, etc) that your code actually works.  Just getting a number doesn't mean it's working as intended.
+6.  In R, avoid iteration (I'll show you why before we're done)
+
+#### Now, on to our confidence interval example. 
+Write a function in R that calculates confidence intervals for a normally-distributed sampling distribution.  You should pass the desired CI (e.g. 95% or 0.95 or whatever), sample mean, standard deviation and size to the function.  The function should use the t-distribution  (dt(), pt(), rt()) to return the upper and lower bounds of the interval.  The t-distribution depends on the sample size, too, a parameter that is called "degrees of freedom" and is equal to n-1.  Challenge #1: see if you can have your function verify that the sample size parameter is an integer and stop, if not.  Challenge #2: have your function print the results in a reasonably legible format and also return() them so you can capture the output in a script.  Challenge #3: modify your function such that it will use a normal distribution if the sample size is greater than 30 and a t-distribution if the sample size is less than or equal to 30 (hint: you will need an if statement).
+
+```{r}
+
+```
+
+#### Next, use your function to put 95% confidence intervals on your reported_effects scores
+```{r, eval = FALSE}
+ww_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2016/GNOM560/560_ww_data.txt", header = T, sep = '\t')
+
+conf_interval(0.95, mean(ww_data$reported_effect), sd(ww_data$reported_effect), length(ww_data$reported_effect))
+```

@@ -1,0 +1,141 @@
+---
+title: "560 Lecture 3 - Probability Distributions"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Import required libraries
+```{r}
+library(ggplot2)
+```
+
+## Built-in R functions for working with probability distributions
+R has built-in functions for each of the probability distributions we covered.  In general, the "d" functions give the distribution, the "p" ones give the cdf, the "q" ones give the quantile function and the "r" ones allow you to generate values drawn randomly from a distribution (with given parameters)
+
+#### Generate two vectors, one of which corresponds to part (say from -1 to 1) of a pdf and the other to part of a cdf for a normally distributed RV with mean=0, SD=1. Plot the results
+```{r}
+x = seq(-1,1,by=0.1)
+pdf_n = dnorm(x,0,1)  ## we need to specify a mean and sd
+cdf_n = pnorm(x,0,1)
+
+norm_data = data.frame("x" = x, "pdf_n" = pdf_n, "cdf_n" = cdf_n)
+
+ggplot(norm_data, aes(x, pdf_n)) + geom_point() + xlab("x value") + ylab("Normal probability density function, u=0, sd=1") + theme_classic()
+ggplot(norm_data, aes(x, cdf_n)) + geom_point() + xlab("x value") + ylab("Cumulative normal probability density function, u=0, sd=1") + theme_classic()
+```
+
+#### Using different geometric elements (geoms), we can easily change how we represent the data (here as lines)
+```{r}
+ggplot(norm_data, aes(x, pdf_n)) + geom_line() + xlab("x value") + ylab("Normal probability density function, u=0, sd=1") + theme_classic()
+ggplot(norm_data, aes(x, cdf_n)) + geom_line() + xlab("x value") + ylab("Cumulative normal probability density function, u=0, sd=1") + theme_classic()
+```
+
+#### Now, let's plot them as shaded curves
+```{r}
+ggplot(norm_data, aes(x, pdf_n)) + geom_area() + xlab("x value") + ylab("Normal probability density function, u=0, sd=1") + theme_classic()
+ggplot(norm_data, aes(x, cdf_n)) + geom_area() + xlab("x value") + ylab("Cumulative normal probability density function, u=0, sd=1") + theme_classic()
+```
+
+#### Let's say we want the two plots to appear side-by-side.  ggplot2 has functionality for this, but you have to have a bona-fide data frame
+```{r}
+#install.packages("reshape")
+library(reshape)
+
+# we melt the norm_data dataframe, resulting in one that has a single mmt per line
+norm_melted = melt(norm_data, id.vars = "x", variable_name = "type_of_dist") 
+
+# we can regenerate the original plots, if we select the appropriate subsets of the data
+ggplot(norm_melted[norm_melted$type_of_dist == "pdf_n",], aes(x, value)) + geom_line() + xlab("x value") + ylab("Normal probability density function, u=0, sd=1") + theme_classic() 
+ggplot(norm_melted[norm_melted$type_of_dist == "cdf_n",], aes(x, value)) + geom_line() + xlab("x value") + ylab("Cumulative normal probability density function, u=0, sd=1") + theme_classic() 
+
+# to plot both together, we use ggplot2's faceting system. the ~ character is used to construct formulas in R (we'll cover it more later).
+ggplot(norm_melted, aes(x, value)) + geom_line() + xlab("x value") + facet_wrap(~ type_of_dist) + theme_classic()
+```
+
+#### Repeat the process for the Poisson distribution with lambda=4 and n from 0 to 20, geneating a pmf and cmf and plotting them side by side
+```{r}
+x = seq(0,20)
+pmf_p = dpois(x,4)  ## we need a lambda value
+cmf_p = ppois(x,4)
+
+pois_data = data.frame("x" = x, "pmf_p" = pmf_p, "cmf_p" = cmf_p)
+
+```
+
+#### Repeat the process for the binomial distribution with n=5, p=0.8, geneating a pmf and cmf and plotting them side by side
+```{r}
+x = seq(0,20)
+pmf_b = dbinom(x,5,0.8)  ## we need # trials n and change of success p
+cmf_b = pbinom(x,5,0.8)
+
+```
+
+#### Directly compare the pmfs from the Poisson distribution and Binomial distribution. See if you can figure out how to get them both on the same plot, and colored differently (hint: it's all about building the right data structure and using the color aesthetic mapping).
+```{r}
+
+```
+
+#### You can also use point shape and size to differentiate the groups, and can customize everything by adjusting the color/shape/size aesthetics
+```{r}
+
+```
+
+#### The Poission distribution approximates Binomial when n is very large and p is very small
+Try to empircally show this relationship by playing with n and p.  Remember that we approximated lambda ~ np.
+Start with n = 10, p = 0.4 and explore different n
+```{r}
+
+```
+
+n = 100, p = 0.04
+```{r}
+
+```
+
+n = 1000, p = 0.004
+```{r}
+
+```
+
+## Getting a feel for the central limit theorem - load the WW domain DMS dataset and make a histogram of the reported_effect scores.
+```{r}
+ww_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2016/GNOM560/560_ww_data.txt", header = T, sep = '\t')
+
+ggplot(ww_data, aes(reported_effect)) + geom_histogram()
+```
+
+#### Other geoms for visualizing the distribution continuous, univariate data
+```{r}
+ggplot(ww_data, aes(reported_effect)) + geom_density()
+ggplot(ww_data, aes(reported_effect)) + geom_dotplot()
+```
+
+#### Next, generate random samples of size 10 using the sample() function.  
+```{r}
+reported_effect.sample = sample(ww_data$reported_effect, 10)
+reported_effect.sample
+```
+
+#### Now, see what happens when you take the means of 10, 100, or 1000 random samples and visualize the sampling distribution of the sample mean (e.g. plot a histogram of the means from each of the samples)
+```{r}  
+ww_means_10 = vector()
+
+for (i in 1:10) {
+ww_means_10 = c(ww_means_10, mean(sample(ww_data$reported_effect, 10)))
+}
+
+ww_means_100 = vector()
+for (i in 1:100) {
+  ww_means_100 = c(ww_means_100, mean(sample(ww_data$reported_effect, 10)))
+}
+```
+
+#### OK, finish this analysis by making a for loop to take 1000 means.  Then, make a dataframe of the results from n = 10, 100 and 1000 and compare the results with a histogram (geom_histogram()) and a density plot (geom_density())
+```{r}
+
+```

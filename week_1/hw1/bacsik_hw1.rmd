@@ -1,0 +1,60 @@
+---
+title: "560_hw_1"
+author: "David Bacsik"
+date: "April 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# 560, HW #1
+## David Bacsik
+## April 12, 2018
+
+## Part 1
+### 1.1a
+Load the master data file and select the data I want from it.
+
+```{r}
+master_data = read.table(file="560_dataset_reduced.txt", header = T, sep = '\t')
+
+head(master_data)
+
+ww_data = master_data[which(master_data$dms_id == 'WW_domain'),]
+
+head(ww_data)
+```
+
+### 1.1b
+Now, I want to calculate some summary statistics about the functional scores of each variant.
+
+```{r}
+func_scores = ww_data$reported_effect
+
+print('The range of functional scores is:')
+print(range(func_scores))
+
+print('The mean of functional scores is:')
+print(mean(func_scores))
+
+print('The variance of functional scores is:')
+print(var(func_scores))
+
+print('The standard deviation of functional scores is:')
+print(sd(func_scores))
+
+print('Quantile Values:')
+print(quantile(func_scores, probs=c(0.025, 0.05, 0.25, 0.5, 0.75, 0.95, 0.975)))
+```
+
+```{r}
+print('Are the 25% and 75% quantiles approximately .67 sd from the mean?')
+print('Approx 25%:')
+print(mean(func_scores)-0.67448*sd(func_scores))
+print('Approx 75%:')
+print(mean(func_scores)+0.67488*sd(func_scores))
+print('Yes, these data are approximately normally distributed.')
+```
