@@ -25,8 +25,96 @@ stim_data = data.frame(individual, baseline, stimulated)
 
 #### 1a
 Perform a one sample t-test comparing baseline to zero.
-The null hypothesis is that the sample mean is not different from zero.
-The althernative hypothesis is that the sample mean is different from zero.
+The null hypothesis is that the baseline mean is not different from zero.
+The althernative hypothesis is that the baseline mean is different from zero.
 
+```{r}
+t.test(stim_data$baseline, mu = 0)
+```
 
+The p value here is less than 0.05, so I am concluding that the true mean is different from zero.
+
+#### 1b
+Now, I would like to see if the transcript counts change after stimulation. To test this, I will see if the means of the baseline and stimulated values are different.
+
+I will conduct a two-sample t-test, two sided. Because each row represents the same sample stimulated and unstimulated, this is a paired data set. I will conduct a paired t-test.
+
+The null hypothesis is that the means are the same.
+The althernative hypthosis is that the means are not the same.
+
+```{r}
+t.test(x=stim_data$baseline, y=stim_data$stimulated, paired=TRUE)
+```
+
+The p value is much less than 0.05, so I am confident that the means of the two groups are not equal. From this, I conclude that stimulation does change the transcript count.
+
+#### 1c
+Rather than performing a classic paired t-test, I will compute the difference between each sample's stimulated and unstimulated states by hand. To do this, I will subtract the baseline value from the stimulated for each sample.
+
+```{r}
+stim_data$diff = stim_data$stimulated - stim_data$baseline
+
+stim_data
+```
+
+Then, to see whether or not the means in the stimulated and baseline groups are the same, we simply perform a one-sample t-test, assuming that the mean of the difference between each sample is equal to 0.
+I expect the p-value for this test to be the same as the paired t-test, as it is fundamentally asking the same question.
+
+```{r}
+t.test(stim_data$diff, mu=0)
+```
+Indeed, the p-value is the same and the mean difference between the stimulated and unstimulated conditions is found to be the same value (1.823). One produced a positive mean and the other a negative mean, but this is simply because of how the conditions were orderd.
+
+### Problem 2
+#### 2a
+Generate two groups of n=5 observations, each from a standard normal distribution.
+Want it to reproducible, so going to set seed = 1
+
+```{r}
+set.seed(1)
+
+group_1 = rnorm(5)
+group_2 = rnorm(5)
+
+group_1
+group_2
+```
+
+Perform a t-test to test H0 : µ1 = µ2 vs H1 : µ1 != µ2 and record the resulting p-value.
+
+```{r}
+t.test(x=group_1, y=group_2)
+
+```
+
+The p-value from this test 0.99.
+
+Now repeat these steps 2000 times and calculate the number of times you would have rejected the null hypothesis with α = 0.05.
+
+```{r}
+random_t = function() {
+  t.test(x=rnorm(5),y=rnorm(5))$p.value
+}
+
+all.pvalues = replicate(2000, random_t())
+```
+
+I would reject the null hypothesis whenever the p-value is less than 0.05. This is:
+```{r}
+
+sum(all.pvalues < 0.05)
+```
+
+Taking random samples from a normal distribution, I would expect about 5% (0.05) of samples to have means that are sufficiently different to generate a p-value that is less than or equal to 0.05. That is, about 5% of the time, by chance, even sampling from the same population, you would see a difference that extreme.
+
+For 2000 samples, this is: 2000 * 0.05, or 100 samples. Our result (87) is close to that value.
+
+If the alpha is dropped to 0.01, I would expect 1 percent, or 20 samples, to cross this threshold.
+
+```{r}
+
+sum(all.pvalues < 0.01)
+```
+
+In our simulation, I found 17 samples crossed the threshold. Again, this is close.
 
