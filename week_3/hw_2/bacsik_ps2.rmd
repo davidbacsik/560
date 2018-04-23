@@ -1,0 +1,32 @@
+---
+title: "PS_2"
+author: "David Bacsik"
+date: "April 22, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem Set 2
+## David Bacsik
+## Due Date: Thursday, April 26, 2018
+
+### Probelm 1
+You have 10 lymphoblastic cell lines, as well as transcript counts for a gene of interest at baseline and after stimulation.
+
+```{r}
+individual = c(1,2,3,4,5,6,7,8,9,10)
+baseline = c(-0.24, 0.25, 1.12, -0.06, 0.46, 0.17, 0.02, 1.10, 0.55, 0.98)
+stimulated = c(1.74, 2.1, 1.65, 2.65, 3.11, 2.31, 1.87, 3.21, 2.19, 1.75)
+stim_data = data.frame(individual, baseline, stimulated)
+```
+
+#### 1a
+Perform a one sample t-test comparing baseline to zero.
+The null hypothesis is that the sample mean is not different from zero.
+The althernative hypothesis is that the sample mean is different from zero.
+
+
+

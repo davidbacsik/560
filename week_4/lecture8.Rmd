@@ -1,0 +1,106 @@
+---
+title: "560 Lecture 8 - Nonparametric Location Tests"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+## Sign Test
+
+#### First let's install and load the appropriate package
+```{r}
+#install.packages("BSDA")
+library(BSDA)
+```
+
+#### Now, let's generate some data to test
+```{r}
+x = rnorm(100, 2)
+```
+
+#### Let's test to see if this data really does come from a distribution with a median of 2
+```{r}
+SIGN.test(x, md = 2)
+```
+
+## Wilcoxon Signed Rank Test
+
+#### Now let's try the Wilcoxon Signed Rank Test on our data
+```{r}
+wilcox.test(x, mu = 2)
+```
+
+#### Interesting - using the rank data in addition to the sign data gave us much better precision.
+
+#### Now, you try with paired data.  First, generate some random data from the normal distribution, calculate the difference and do the appropriate test.
+```{r}
+
+```
+
+## Wilcoxon Rank Sum Test
+
+#### Now, assume that your made up normally distribution data is actually a set that you'd like to compare to the first data set x.  Use wilcox.test to test whether they are the same.  
+```{r}
+
+```
+
+####  Now make random normal data set of 1000 elements with a mean of 2 and a random gamma data set whose shape parameter is 2 (will also have an expected value of 2).  Make histograms of each, marking the mean and median.  
+```{r}
+
+```
+
+#### What do you think will happen when you do a Wilcoxon rank sum test with these data?  Give it a try and see.
+```{r}
+
+```
+
+#### Next, do a WRST on the WW domain reported_effect scores vs the Pab1 reported_effect scores
+```{r}
+ww_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2017/GNOM560/560_ww_data.txt", header = T, sep = '\t')
+pab_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2017/GNOM560/560_pab_data.txt", header = T, sep = '\t')
+
+
+```
+
+#### Do you think it's a good idea to use this test for these data?  If so, why?  If not, why not?
+
+
+## Kruskal-Wallis Test
+
+#### OK, now let's give the Kruskal-Wallis test a try.  Create three random gamma-distributed data set with 100 elements and an identical shape parameter of your choice
+```{r}
+
+```
+
+#### Now, use kruskal.test() to verify that the medians are the same 
+```{r}
+
+```
+
+#### OK, now double one of the location parameters and test again
+```{r}
+
+```
+
+#### Use pairwise.wilcox.test() to see which of our three data sets is different from the others (note the automatic correction for multiple hypothesis testing)
+```{r}
+
+```
+
+#### To get a sense of the power of the KW test, try varying the shape parameter in increments of 1% up or down and find the threshold for detecting the difference
+```{r}
+
+```
+
+# This is interesting... to draw a conclusion try repeating this exercise 1000 times
+```{r}
+
+```

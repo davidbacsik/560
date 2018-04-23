@@ -1,0 +1,125 @@
+---
+title: "560 Lecture 6 - Comparing Proportions, Loops vs. Array Operations"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+## Chi-Square Test
+
+#### Generate some numbers to sample from
+```{r}
+numbers = 50:5000
+```
+
+#### Generate a random 2x2 table from our numbers, and do a chi-square test
+```{r}
+test.matrix = matrix(sample(numbers, 4), nrow = 2)
+
+test.matrix
+
+chisq.test(test.matrix)
+```
+
+#### OK, what if we want just the P-value?  First, let's find out what the attributes of the chisq.test object are
+```{r}
+attributes(chisq.test(test.matrix))
+```
+
+#### We can use $ to extract a particular element
+```{r}
+chisq.test(test.matrix)$p.value
+```
+
+#### FYI, mcnemar.test() and fisher.test() will enable you to do the other tests we talked about today
+
+## Moving on, what happens if we do LOTS of chi-square tests using a for loop?
+```{r}
+big.matrix = matrix(sample(numbers, 100000, replace = TRUE), ncol = 4)
+head(big.matrix)
+
+chisq.results = vector() # Define chisq.results vector that will be used inside the loop
+
+# This loop of just 25000 elements takes ~10s to run on my computer!
+for (i in 1:length(big.matrix[,1])) {
+test.matrix = matrix(big.matrix[i,], nrow = 2)
+test.result = chisq.test(test.matrix)$p.value
+chisq.results = c(chisq.results, test.result)
+}
+
+# We can check the runtime of any R expression with system.time()
+chisq.results = vector()
+system.time(for (i in 1:length(big.matrix[,1])) {
+test.matrix = matrix(big.matrix[i,], nrow = 2)
+test.result = chisq.test(test.matrix)$p.value
+chisq.results = c(chisq.results, test.result)
+})
+```
+
+#### The apply() family of functions - a better way to go!  Apply returns a the output of a # function to an array or matrix 
+```{r}
+apply.pvalues = apply(big.matrix, 1, function(x) {chisq.test(matrix(x, nrow=2))})
+```
+
+#### This works fine, but...
+```{r}
+apply.pvalues[1]
+```
+
+#### ...each element is the output of chisq.test (e.g. the p-value plus all the other stuff).  What if we want just the p-value?  
+```{r}
+apply.pvalues = apply(big.matrix, 1, function(x) {chisq.test(matrix(x, nrow=2))$p.value})
+
+apply.pvalues[1]
+```
+
+#### And we can show that apply is a lot faster than using a loop
+```{r}
+system.time(apply(big.matrix, 1, function(x) {chisq.test(matrix(x, nrow=2))$p.value}))
+```
+
+# Let's check the two methods:
+```{r}
+plot(chisq.results, apply.pvalues)
+```
+
+## Why?  
+R is an interpreted language, meaning that the code is parsed and evaluated at runtime (rather than compiled beforehand like C).  This means that things like for loops, which have a lot of overhead, are slow.  R is very efficiently vectorized, meaning that simultaneous application of a function to elements of a vector/matrix/dataframe is very efficient. apply() is part of a family of functions - tapply(), sapply(), lapply() and mapply() which let you vectorize just about any function on just about any data type. If you have more questions check out http://www.r-project.org/doc/Rnews/Rnews_2008-1.pdf page 46
+
+## Just for fun, let's go back to our DMS data and play with apply().
+
+```{r}
+ww_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2016/GNOM560/560_ww_data.txt", header = T, sep = '\t')
+```
+
+#### Write your own apply() function that identifies positions at which the aa1_polarity is identical to the aa2 polarity.  
+To do this you will have to write your own function inside the apply() call (or define it beforehand) that will return TRUE if the polarities match and FALSE if they don't. As a hint, here is an example of a very simple function (just prints each x, which is a row of ww_data).  A further hint is that you may want to use the == operator, which will evaluate whether what is on either side (e.g. 1 == 1 is TRUE).
+```{r, eval = FALSE}
+apply(ww_data, 1, function(x) {print(x)})
+```
+
+#### Here is an apply call that does the trick.
+```{r}
+polarities = apply(ww_data, 1, function(x) {x['aa1_polarity'] == x['aa2_polarity']})
+```
+
+#### Now look at the reported_effects in the two cases using density plots, violin plots and boxplots
+```{r}
+same_pol = data.frame("pol" = "same_pol", reported_effect = ww_data$reported_effect[which(polarities)])
+diff_pol = data.frame("pol" = "diff_pol", reported_effect = ww_data$reported_effect[-which(polarities)]) # Note the use of minus before a vector of indicies will give you back all entries EXCEPT the ones in the index
+
+pols = rbind(same_pol, diff_pol)
+
+ggplot(pols, aes(reported_effect, fill = pol)) + geom_density(alpha = 0.25)
+ggplot(pols, aes(pol, reported_effect, fill = pol)) + geom_violin()
+ggplot(pols, aes(pol, reported_effect, fill = pol)) + geom_boxplot()
+```
+

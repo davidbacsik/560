@@ -1,9 +1,10 @@
 ---
-title: "560 HW #1"
+title: '560 HW #1'
 author: "David Bacsik"
 date: "April 10, 2018"
-
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 ### *due date: Thursday, April 12, 2018*
 
@@ -12,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ### Part 1
-#### 1.1a
+#### 1a
 Load the master data file and select the data I want from it. I am going to use the ww_data we used in the lab.
 
 ```{r}
@@ -25,7 +26,7 @@ ww_data = master_data[which(master_data$dms_id == 'WW_domain'),]
 head(ww_data)
 ```
 
-#### 1.1b
+#### 1b
 Now, I want to calculate some summary statistics about the functional scores of each variant.
 
 ```{r}
@@ -69,7 +70,7 @@ In a normal distribution, the 25th percentile would be approximately `r approx_2
 
 These numbers are pretty close, so based on this, I conclude that our data are approximately normally distributed.
 
-#### 1.1c
+#### 1c
 I want to visualize the distribution of our data. To do this, I will make a histogram of the functional scores with 50 bins.
 
 ```{r}
@@ -77,7 +78,7 @@ I want to visualize the distribution of our data. To do this, I will make a hist
 hist(func_scores, 50, freq=TRUE, main='WW DMS Functional Scores', xlab='Score', ylab='Frequency')
 ```
 
-#### 1.1d
+#### 1d
 I'd like to see if there are broad trends to mutation to a specific amino acid. For each of the 20 amino acids, I will calculate the mean effect of mutation to that amino acid.
 
 ```{r}
@@ -88,7 +89,7 @@ effect_by_aa.mean
 
 ```
 
-#### 1.1e
+#### 1e
 Now I will plot these data on a barplot.
 
 ```{r}
@@ -97,7 +98,7 @@ barplot(effect_by_aa.mean, main = 'WW DMS Substituted Amino Acids', xlab = 'Amin
 
 ```
 
-#### 1.1f
+#### 1f
 Focusing just on stop codons, alaline, and tryptophan, I will plot the distribution of functional scores for each of these amino acid substitutions.
 
 ```{r}
@@ -109,12 +110,12 @@ sub = c(effect_by_aa['X'], effect_by_aa['A'], effect_by_aa['W'])
 boxplot(sub, main = 'WW DMS Substituted Amino Acids', names = c('Stop','Alanine','Tryptophan'), xlab= 'Amino Acid', ylab='Functional Scores')
 ```
 
-#### 1.1g
+#### 1g
 Now, I would like to see how the above distributions of scores compares to a random sampling of scores.
 
 First, I will pool all the scores for these three codons. Then, I will generate a random sample of the same size. Finally, I will see if the real scores trend above, below, or similarly to the randmon sampling to determine whether they are random or not.
 
-Because I am randomly sampling, and I want this to be repeatable, I will set the seed for this chunk of code at 1.
+Because I am randomly sampling, and I want this to be repeatable, I will set the seed for this chunk of code at 1. The data represented are representative of a half dozen seeds I tested.
 
 ```{r}
 set.seed(1)
@@ -126,9 +127,287 @@ random_sample.a = sample(combined_scores, length(unlist(effect_by_aa['A'])))
 random_sample.w = sample(combined_scores, length(unlist(effect_by_aa['W'])))
 random_sample = list(X = random_sample.x, A = random_sample.a, W = random_sample.w)
 
-boxplot(random_sample, main = 'WW DMS Randomized Amino Acid Substitution', names = c('Randomized Stop','Random Alanine','Randomized Tryptophan'), xlab= 'Amino Acid (Randomized)', ylab='Randomized Functional Scores')
+boxplot(random_sample, main = 'WW DMS Randomized Amino Acid Substitution', names = c('Randomized Stop','Randomized Alanine','Randomized Tryptophan'), xlab= 'Amino Acid (Randomized)', ylab='Randomized Functional Scores')
 ```
 
 The random distribution is pretty uniform, while the real data lie above (maybe) and below (certainly) the uniform distribtion. I am conlcuding that stop codon substituions have a real, negative effect on function; alanine and tryptophan substitutions may be slightly less deleterious than a random substitution.
 
 ### Part 2
+A haploid species (one copy of each gene) has two possible alleles at a locus: A or B. You have 4 individual organisms ('isolates').
+
+#### 2a
+**What is the sample space for this experiment?**  
+The sample space is all of the uniqe combinations of the possible alleles (A or B) present at the locus in each individual isolate.
+
+**How many items does the sample space contain?**  
+The sample space contains 16 items.
+
+**Can you think of a general rule for finding the size of the sample space if you collect n isolates?**  
+n = number of isolates  
+i = loci per isolate  
+j = number of alleles  
+
+sample space = j \^ (n \* i)
+
+**Use this rule to find the sample space for 20 isolates.**  
+n = 20  
+i = 1 (haploid)  
+j = 2  
+
+sample space = 2 \^ (20 \* 1) = *1048576 possible outcomes*
+
+#### 2b
+**Assume that the two alleles have equal frequency in the population** p = 0.5  
+**If you sampled four isolates at random, what is the probability that you will fail to observe A in any of your isolates?** k = 0  
+
+There are 16 possible outcomes (AAAA, AAAB, AABA, ... BBBA, BBBB). Because A and B have equal frequency, each of the outcomes is equally likely.
+
+Only one outcome, BBBB, fails to represent A in any of the isolates.  
+*The probability is 1/16.*
+
+#### 2c
+**Now calculate the probability that you will observe A once, twice, three or four times.**  
+This a binomial distribution, with p = 0.5. We are calculating the Pr(k) with k = 1, 2, 3, and 4.
+
+\[
+ Pr(k = x)  =  \binom{n}{k} \cdot p^kq^{n-k}
+\]
+
+```{r}
+k_vals = c(0,1,2,3,4)
+bin_prob <- function(k){
+prob_result = dbinom(k, size=4, prob=0.5)
+return(prob_result)
+}
+
+probs = lapply(k_vals, bin_prob)
+
+probs = setNames(probs, k_vals)
+```
+
+The probability of getting A once is `r probs$'1'`.  
+The probability of getting A twice is `r probs$'2'`.  
+The probability of getting A thrice is `r probs$'3'`.  
+The probability of getting A four times is `r probs$'4'`.
+
+Plot the results to define the probability distribution governing the possible outcomes.
+
+``` {r}
+sub = c(probs$'1', probs$'2', probs$'3', probs$'4')
+
+barplot(sub, names = c('1', '2', '3', '4'), main = 'Probability of A Alles', xlab = 'Number of A Alleles, out of 4', ylab = 'Probability')
+
+```
+
+#### 2d
+**Define a random variable to express the outcomes A and B for an isolate numerically.**  
+A random variable is a function that maps experimental outcomes to a number.  
+My random variable for alleles A and B will be discreet, with possible values of 0 (for A) and 1 (for B).
+
+**Calculate the expected value of random variable given that the alleles have equal frequency.**
+
+The expected value of this discreet variable is calculated as follows:
+\[
+ E[X] = \sum{x} * Pr(X = x)
+\]
+
+In our case, x is equal to 0 or 1.  
+For x = 0, the probability is 0.5 and the E(0) is 0.  
+For x = 1, the proability is 0.5 and the E(1) is 0.5.  
+*Totalling these up, the expected value of our discreet variable is 0.5, even though this value never actually occurs.*
+
+### Part 3
+Develop a measure of spread for numerical data that is distinct from variance.  
+#### 3a  
+Rather than looking at the distance from the mean, one could calculate a frequency-based statistic that references the median.
+
+For simplicity of understanding, it could be calculated in log 2 space, so you calculate the percentage of values that fall below half the median, and calculate the percentage of values that fall above twice the median.
+
+Data with low values would be centrally distributed around the median, and data with high values would be spread towards the edges.
+
+S(X) = the spread of the data  
+m = median  
+n = total number of data points  
+n_i = value of the *i*th point in the data set  
+
+For each point (n_i) in the datset,  
+k = 1 if n_i < m/2  
+k = 1 if n_1 > 2*m  
+otherwise, k = 0  
+
+Then, sum these and calculate the percentage of data points that fall in this extreme range.
+\[
+ S(X) = \frac{\sum{k}}{n}
+\]
+
+#### 3b
+**Compare and contrast this with variance**
+Variance is centered around the mean, while this statistic is centered around the median.
+
+While variance takes on an absolute value, wihch is influenced by the scale of the data, this statistic is a percentage which is agnostic to the scale of the values, and describes their relative distribution.
+
+### Part 4
+n(S. cerevesiae) = 37  
+n(S. paradoxus) = 27
+
+#### 4a
+All interspecies pairwise crossings = 37 \* 27 = `r 37 * 27` crossings.
+
+#### 4b
+All intraspecies pairwise crossings for S. cerevisae:  
+37! = `r factorial(37)` crossings
+
+All intraspecies pairwise crossings for S. paradoxus:  
+27! = `r factorial(27)` crossings
+
+#### 4c
+The probability that you randomly pick a natural isolate of S. cerevisae is 25 out of 37.
+
+The probability that you randomly pick a clinical isolate of S. cerevisae is 5 out of 37.
+
+However, since you are choosing two at the same time, their probabilities are not independent. Choosing a clinical isolate increases the chances of choosing a natural isolate, and vice versa. Choosing a laboratory strain sets your chance of choosing both to 0.
+
+I'm not sure how to model this mathematically. This is the one I didn't get.
+
+### Part 5
+The overall proportion of chip genes involved in sensory perception of sound (SPS) is 1000 out of 10,000, or 1 in 10.
+
+Of our 100 differentially expressed genes, 15 are involved in SPS.
+
+This is a hypergeometric distribution. SPS genes are considered a success, while other genes are considered a failure.
+
+To calculate the chance that 15 or more would be observed by chance, I will calculate the probability that 14 or less are observed by chance and subtract this from 1.
+
+```{r}
+vals = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14)
+
+hyper_prob <- function(x){
+return(dhyper(x, 1000, 9000, 100))
+}
+
+hyper_probs = lapply(vals, hyper_prob)
+
+cum_prob = do.call(sum, hyper_probs)
+
+gt_15 = 1 - cum_prob
+```
+
+The chance of getting 15 or more hits by random chance is `r gt_15`.
+
+### Part 6
+You divide the genome into 579 bins of equal size. You want to see whether certain regions of the genome--certain bins--contain more eQTLs than expected by chance. You have found 1,013 eQTLs.
+
+#### 6a
+**What distribution does X follow?**  
+An eQTL is a binary, discreet random variable. It is either an eQTL (success) or it is not (failure).
+
+Here, we are attempting to assess the probability of an eQTL occuring in a fixed sample of space across the genome. One eQTL occurring does not inherently affect the probability of other eQTLs occuring (we aren't 'using up' eQTLs), so the events are independent. This case is commonly modelled by the Poisson distribution.
+
+In this case, the average rate, lambda, is expressed in terms of 'eQTLs per bin':  
+1,013 eQTLs / 579 bins = `r 1013/579` eQTLs per bin
+
+#### 6b
+**Assuming that eQTLs are randomly distributed, what is the probability that a bin contains no eQTLs.**  
+l (lambda) = `r 1013/579`  
+k = 0  
+n = 579  
+
+\[
+P(x) = \frac{{e^{ - \lambda } \lambda ^x }}{{x!}}
+\]
+
+```{r}
+l = 1013/579
+k = 0
+
+pois_prob = dpois(k, l)
+```
+
+The probability of getting no eQTLs in a bin is `r pois_prob`.
+
+## 6c
+**What is the probability that a bin contains 40 or more eQTLs.**
+By hand, I would calculat the probability that a bin contains 39 or fewer eQTLs, as this is bounded by 0, which is much easier to calculate than the alternative of going up to 1,013.
+
+In R, I will simply use th e ppois distribution function, which does this by hand. The only trick is that you must subtract one from your desired k, as you would by hand.
+
+```{r}
+l = 1013/579
+k = 40 - 1
+
+pois_prob = ppois(k, l, lower.tail = FALSE)
+```
+
+The probability of getting 40 eQTLs in a bin is `r pois_prob`, or essentially 0.
+
+## 6d
+**Find the number of eQTL in a bin x, such that P(X ≥ x) = 0.05**
+
+R also has an easy function for this: qpois.
+
+```{r}
+p = 0.05
+l = 1013/579
+
+pois_val = qpois(p, l, lower.tail=FALSE)
+
+```
+
+The number of eQTL in a bin, such that P(X >= x) = 0.05 is `r pois_val`.
+
+### Part 7
+n (number of isolates) = 12
+
+#### 7a
+The literature on *R. Waterstonii* is sparse. I will use the simple estimator of uniforma average mutation rate across all isolates:  
+p (the estimated lamda) = m / n
+```{r}
+n = 12
+muts = c(12, 15, 10, 4, 6, 15, 18, 12, 7, 11, 5, 14)
+m = sum(muts)
+
+p = m / n
+```
+
+My point estimate for lambda, the mutation rate, is `r p` mutations per genome.
+
+#### 7b
+The variance of my actual sample is `r var(muts)` mutations per genome. This is about twice my estimate of lamda. This concerns me, because I generally think a 2-fold difference is the limit of handwaving for many genetic experiments. However, I'm pretty sure this interpretation is groundless. The next question will shed some insight.
+
+#### 7c
+**Given your point estimate of λ, generate 1,000 random samples of size 12 from a Poisson distribution**  
+
+Want this to be reproducible, so setting seed to 1. Again, I tested a handful of seeds and they all produced similar values, so this is representative.
+
+**Find the sample variance for each of the 1,000 samples.**  
+My laptop keeps crashing, so I am going to do this upfront to reduce the memory. I'm not totally sure this is a memory problem, but it seems to like this better.
+
+```{r}
+set.seed(1)
+reps = 1000
+p = 10.75
+n = 12
+
+var_dist = replicate(reps, var(rpois(n, p)))
+
+head(var_dist)
+
+```
+
+**How many of these simulated data sets have a sample variance greater than your observed data?**
+
+R will go through a list and return a boolean describing whether a given value is greater than each item in a list:  
+e.g. list > x = TRUE
+
+One can then sum all the true statements. One can then divide by the number of items to get a proportion of variance estimates which fall above the one we observed.
+
+```{r}
+
+greater_vars = sum(var_dist > p)
+
+greater_vars
+
+prop_vars = greater_vars / length(var_dist)
+```
+
+The proportion of variance estimates which fall above the one we observed is `r prop_vars`, or slightly less than half. Now, I believe our estimate was just as likely to be this extreme as it was to be less extreme. I revise my answer; it's actuall pretty reasonable.

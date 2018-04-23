@@ -1,0 +1,100 @@
+---
+title: "560 Lecture 5 - T tests"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+## One Sample t-Test
+```{r}
+ww_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2017/GNOM560/560_ww_data.txt", header = T, sep = '\t')
+```
+
+#### Now, let's do t-test (two-sided) to see if the sample mean deviates from 0
+```{r}
+t.test(ww_data$scaled_effect, mu = 0)
+```
+
+#### Let's learn how to specify the alternative hypothesis
+```{r}
+t.test(ww_data$scaled_effect, mu = 0, alternative = "two.sided")
+t.test(ww_data$scaled_effect, mu = 0, alternative = "less")
+t.test(ww_data$scaled_effect, mu = 0, alternative = "greater")
+```
+
+
+## Two Sample t-Test
+```{r}
+pab_data = read.table(file="http://faculty.washington.edu/dfowler/teaching/2017/GNOM560/560_pab_data.txt", header = T, sep = '\t') # Load up another DMS (of the yeast protein Pab1) as a comparator
+```
+
+#### First, we should check our assumptions about this data.  Let's start with normality, assessed visually.
+```{r}
+ggplot(ww_data, aes(scaled_effect)) + geom_histogram(fill = "blue")
+ggplot(pab_data, aes(scaled_effect)) + geom_histogram(fill = "red")
+```
+
+#### We can make a Q-Q plot, too. 
+A Q-Q plot is a graphical method for comparing two probability distributions by plotting their quantiles against each other.  A point on the plot corresponds to a quantile of the first distribution plotted against the same quantile of the second distribution.  If the distributions are identical, the points will lie on a line with a slope of 1.  If they have the same shape but are related by a linear transformation, the Q-Q plot will be linear but with a slope other than 1.  Q-Q plots allow you to spot outliers.
+
+Here is a Q-Q plot of randomly generated datasets of 100 observations that drawn from normal distributions with identical parameters
+```{r}
+par(mfrow=c(1,1))
+qqplot(rnorm(100), rnorm(100))
+```
+Here is one for a random normal and a random gamma 
+```{r}
+qqplot(rnorm(100), rgamma(100, shape=1))
+```
+
+Now, make Q-Q plots comparing your scaled_effect scores and the Pab1 scaled_effect scores to normal distributions with the mean and sd of the actual data
+```{r}
+qqplot(dnorm(seq(min(ww_data$scaled_effect), max(ww_data$scaled_effect), 0.01), mean(ww_data$scaled_effect), sd(ww_data$scaled_effect)), ww_data$scaled_effect)
+qqplot(dnorm(seq(min(pab_data$scaled_effect), max(pab_data$scaled_effect), 0.01), mean(pab_data$scaled_effect), sd(pab_data$scaled_effect)), pab_data$scaled_effect)
+```
+
+Next, compare the distribution of the Pab1 scaled_effect data to your data using a Q-Q plot
+```{r}
+qqplot(ww_data$scaled_effect, pab_data$scaled_effect)
+```
+
+#### The Kolmogorov-Smirnov test is a nonparametric test that can be used to compare a sample distribution ot a reference distribution or to compare two sample distributions. 
+Try to use the Kolmogorov-Smirnov test (ks.test()) to check for normality.  As we'll learn, the KS test compares a set of data to a cumulative distribution function.  Here, you will want to use "pnorm" (the normal cumulative distribution function).
+```{r}
+ks.test(ww_data$scaled_effect, "pnorm", mean(ww_data$scaled_effect), sd(ww_data$scaled_effect))
+ks.test(pab_data$scaled_effect, "pnorm", mean(pab_data$scaled_effect), sd(pab_data$scaled_effect))
+```
+
+#### Bartlett's test can be used to determine if samples are drawn from populations with the same variance.  
+Try to use Bartlett's test (bartlett.test()) test to see if the variances can be pooled.  
+```{r}
+bartlett.test(list(ww_data$scaled_effect, pab_data$scaled_effect))
+```
+
+Now, do the appropriate t-test (two-sided).  Note that for the DMS data, you probably found that the data set isn't really normal. A question that arises is why is it OK to do a t-test here?
+```{r}
+t.test(ww_data$scaled_effect, pab_data$scaled_effect, paired=FALSE,var.equal=TRUE)
+```
+
+Let's learn how to specify the alternative hypothesis (one-sided)
+```{r}
+t.test(ww_data$scaled_effect, pab_data$scaled_effect, paired=FALSE, alternative = "less")
+t.test(ww_data$scaled_effect, pab_data$scaled_effect, paired=FALSE, alternative = "greater")
+```
+
+#### Do the results make sense?
+```{r}
+ggplot(pab_data, aes(scaled_effect)) + geom_density(fill = "blue", alpha = 0.25) + geom_density(data = ww_data, aes(scaled_effect), fill = "red", alpha = 0.25) # Note that we can add additional layers to a plot in ggplot really easily.  New layers can even come from a different dataset!
+
+mean(pab_data$scaled_effect)
+mean(ww_data$scaled_effect)
+```
+#### If we look at the way the data are distributed and each sample mean, it makes sense that they likely are drawn from distributions with the same mean.
