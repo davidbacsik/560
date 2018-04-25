@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
 ```
 
 # Problem Set 2
@@ -24,7 +26,7 @@ stim_data = data.frame(individual, baseline, stimulated)
 ```
 
 #### 1a
-*Perform a one sample t-test comparing baseline to zero.*
+**Perform a one sample t-test comparing baseline to zero.**
 The null hypothesis is that the baseline mean is not different from zero.
 The althernative hypothesis is that the baseline mean is different from zero.
 
@@ -37,7 +39,7 @@ The p value here is less than 0.05, so I am concluding that the true mean is dif
 #### 1b
 Now, I would like to see if the transcript counts change after stimulation. To test this, I will see if the means of the baseline and stimulated values are different.
 
-*I will conduct a two-sample t-test, two sided.* Because each row represents the same sample stimulated and unstimulated, this is a paired data set. I will conduct a paired t-test.
+**I will conduct a two-sample t-test, two sided.** Because each row represents the same sample stimulated and unstimulated, this is a paired data set. I will conduct a paired t-test.
 
 The null hypothesis is that the means are the same.
 The althernative hypthosis is that the means are not the same.
@@ -67,7 +69,7 @@ Indeed, the p-value is the same and the mean difference between the stimulated a
 
 ### Problem 2
 #### 2a
-*Generate two groups of n=5 observations, each from a standard normal distribution.*
+**Generate two groups of n=5 observations, each from a standard normal distribution.**
 Want it to reproducible, so going to set seed = 1
 
 ```{r}
@@ -80,7 +82,7 @@ group_1
 group_2
 ```
 
-*Perform a t-test to test H0 : µ1 = µ2 vs H1 : µ1 != µ2 and record the resulting p-value.*
+**Perform a t-test to test H0 : µ1 = µ2 vs H1 : µ1 != µ2 and record the resulting p-value.**
 
 ```{r}
 t.test(x=group_1, y=group_2)
@@ -89,7 +91,7 @@ t.test(x=group_1, y=group_2)
 
 The p-value from this test 0.99.
 
-*Now repeat these steps 2000 times and calculate the number of times you would have rejected the null hypothesis with α = 0.05.*
+**Now repeat these steps 2000 times and calculate the number of times you would have rejected the null hypothesis with α = 0.05.**
 
 ```{r}
 set.seed(1)
@@ -104,24 +106,29 @@ pvalues_5 = replicate(2000, random_5())
 I would reject the null hypothesis whenever the p-value is less than 0.05. This is:
 ```{r}
 
-sum(pvalues_5 < 0.05)
+rej_5.05 = sum(pvalues_5 < 0.05)
+
+rej_5.05
 ```
 
 Taking random samples from a normal distribution, I would expect about 5% (0.05) of samples to have means that are sufficiently different to generate a p-value that is less than or equal to 0.05. That is, about 5% of the time, by chance, even sampling from the same population, you would see a difference that extreme.
 
-For 2000 samples, this is: 2000 * 0.05, or 100 samples. Our result (83) is close to that value.
+For 2000 samples, this is: 2000 ** 0.05, or 100 samples. Our result (83) is close to that value.
 
-*If the alpha is dropped to 0.01*, I would expect 1 percent, or 20 samples, to cross this threshold.
+**If the alpha is dropped to 0.01**, I would expect 1 percent, or 20 samples, to cross this threshold.
 
 ```{r}
 
-sum(pvalues_5 < 0.01)
+rej_5.01 = sum(pvalues_5 < 0.01)
+
+rej_5.01
+
 ```
 
 In our simulation, I found 17 samples crossed the threshold. Again, this is close.
 
 #### 2b
-*Repeat problem a, but now change the sample size to 50 and then to 500. Do the results change? Why or why not?*
+**Repeat problem a, but now change the sample size to 50 and then to 500. Do the results change? Why or why not?**
 
 First, I will test a sample size of 50:
 ```{r}
@@ -138,7 +145,9 @@ Again, I will only expect about 5% (~100) of the samples to result in means extr
 
 ```{r}
 
-sum(pvalues_50 < 0.05)
+rej_50.05 = sum(pvalues_50 < 0.05)
+
+rej_50.05
 ```
 
 In this case, exactly 100 had p-values less than 0.05. This is in line with expectation.
@@ -147,7 +156,9 @@ Testing an alpha of 0.01, I would expect about 20 samples to result in means ext
 
 ```{r}
 
-sum(pvalues_50 < 0.01)
+rej_50.01 = sum(pvalues_50 < 0.01)
+
+rej_50.01
 ```
 
 In this case, 22 had p-values less than 0.01. Again, this is in line with expectation.
@@ -163,9 +174,11 @@ random_500 = function() {
 
 pvalues_500 = replicate(2000, random_500())
 
-sum(pvalues_500 < 0.05)
+rej_500.05 = sum(pvalues_500 < 0.05)
+rej_500.05
 
-sum(pvalues_500 < 0.01)
+rej_500.01 = sum(pvalues_500 < 0.01)
+rej_500.01
 ```
 
 Again, the values are as expected (103 and 17).
@@ -173,7 +186,7 @@ Again, the values are as expected (103 and 17).
 Because the distribution of the mean is normal, changing the sample size does not change the number of sample means which are extreme, surpassing the p-value threshold.
 
 #### 2c
-*Repeat problem a, but now change the mean of one of the groups to be µ = 1. What did you expect would happen? Summarize your results.*
+**Repeat problem a, but now change the mean of one of the groups to be µ = 1. What did you expect would happen? Summarize your results.**
 
 Preivously the two groups were drawn from the same population. They both had means of 0 and standard deviations of 1.
 
@@ -188,15 +201,17 @@ random_5_twopops = function() {
 
 pvalues_5_twopops = replicate(2000, random_5_twopops())
 
-sum(pvalues_5_twopops < 0.05)
+rej_5_twopops.05 = sum(pvalues_5_twopops < 0.05)
+rej_5_twopops.05
 
-sum(pvalues_5_twopops < 0.01)
+rej_5_twopops.01 = sum(pvalues_5_twopops < 0.01)
+rej_5_twopops.01
 ```
 
-As expected, the number of samples that have means sufficently different to produce a low p-value is 544, much greater than the 100 that would be expected by chance if the two samples were drawn from the same population.
+As expected, the number of samples that have means sufficently different to produce a p value less than 0.05 is 544, much greater than the 100 that would be expected by chance if the two samples were drawn from the same population.
 
 #### 1d
-*Repeat problem b, but now change the mean of one of the groups to be µ = 1. What did you expect would happen? Summarize your results.*
+**Repeat problem b, but now change the mean of one of the groups to be µ = 1. What did you expect would happen? Summarize your results.**
 
 Because these samples are drawn from two different populations, I expect more than 100 samples to produce a low p-value. However, as in problem b, I do not expected the number of samples that produce a low p-value to change as sample size changes.
 
@@ -209,9 +224,11 @@ random_50_twopops = function() {
 
 pvalues_50_twopops = replicate(2000, random_50_twopops())
 
-sum(pvalues_50_twopops < 0.05)
+rej_50_twopops.05 = sum(pvalues_50_twopops < 0.05)
+rej_50_twopops.05
 
-sum(pvalues_50_twopops < 0.01)
+rej_50_twopops.01 = sum(pvalues_50_twopops < 0.01)
+rej_50_twopops.01
 
 random_500_twopops = function() {
   t.test(x=rnorm(500),y=rnorm(500, mean = 1))$p.value
@@ -219,20 +236,174 @@ random_500_twopops = function() {
 
 pvalues_500_twopops = replicate(2000, random_500_twopops())
 
-sum(pvalues_500_twopops < 0.05)
+rej_500_twopops.05 = sum(pvalues_500_twopops < 0.05)
+rej_500_twopops.05
 
-sum(pvalues_500_twopops < 0.01)
+rej_500_twopops.01 = sum(pvalues_500_twopops < 0.01)
+rej_500_twopops.01
 ```
 
-#ASK
-
-The results indicate that almost all the samples in the 50 sample size test, and all of the samples in the 500 sample size test produce extremely low p-values. This is not the result I expected. I suppose intuitively, as you get a larger sample, you get more confident that they are from different populations... Why is this different when you draw from a single population? Is there something I could read about this?
+This is not the result I expected. Unlike the 5 sample size test, almost all the samples in the 50 sample size test, and all of the samples in the 500 sample size test produce extremely low p-values. As you get a larger sample, the denominator in the t-test gets larger and larger, so for the same difference of means, your t-statistic gets larger and larger. This means that you are more and more confident that the difference in means is not due to chance as your sample size gets larger.
 
 #### 2e
 
-#ASK
-Plot the results from 2a-d on a single plot. This is sketched out on a notebook on your desk.
+Plot the results from parts a-d:
+**Try to produce one plot that summarizes the results from all four problems, showing how your power (probability of rejecting the null) changes based on sample size and the difference in means.**
 
-Also, do a quick ggplot tutorial so you can plot this easily and comfortably. No more than 30 minutes.
+To do this, I will make a plot which compares sample size on the x-axis to probability of rejecting the null on the y-axis. I will make one plot for alpha = 0.05, and one plot for alpha = 0.01.
+
+First, I must combine the data from parts a-d into a single dataframe.
+
+```{r}
+delta_mean = c('0',0,0,0,0,0,1,1,1,1,1,1)
+alpha = c('alpha=0.05','alpha=0.01','alpha=0.05','alpha=0.01','alpha=0.05','alpha=0.01','alpha=0.05','alpha=0.01','alpha=0.05','alpha=0.01','alpha=0.05','alpha=0.01')
+sample_size = c(5,5,50,50,500,500,5,5,50,50,500,500)
+prob_rej = c(rej_5.05, rej_5.01, rej_50.05, rej_50.01, rej_500.05, rej_500.01, rej_5_twopops.05, rej_5_twopops.01, rej_50_twopops.05, rej_50_twopops.01, rej_500_twopops.05,rej_500_twopops.01)
+
+power_data = data.frame(delta_mean, alpha, sample_size, prob_rej)
+
+power_data
+```
+
+Next, I will generate my plots.
+
+```{r}
+g = ggplot(power_data, aes(x=sample_size, y=prob_rej)) +
+  geom_point(aes(col=delta_mean)) +
+  geom_smooth(method='loess', aes(col=delta_mean), se=FALSE)
+
+g_facet = g + facet_wrap( ~ alpha) +
+   labs(title="Power of t-test by sample size", subtitle='2000 random samplings', y="Power (probability of rejecting null)", x="Sample Size", color='Delta of Means')
+   
+suppressWarnings(plot(g_facet))
+```
+
+When the difference of populations means is 0 (that is, samples are drawn from the same population), sample size does not matter, and the probability of rejecting the null is equal to that expected by chance.
+
+When the difference of population means is 1 (samples are drawn from different populations), sample size increases the power and confidence is calling two distinct populations. Going from 5 to 50 drastically increases power, but then the it is saturated, as going to 500 adds little confidence.
+
+This is true for both alpha = 0.05 and alpha = 0.01.
 
 ### Problem 3.
+An expensive private school also asks for donations.
+First, I will put the data into a dataframe.
+
+Year is the year a class will graduate.
+Donated is the number of parents from that class who donated to the school.
+Total parents is the total number of parents for a given class.
+
+Also, want to ultimately generate a contingency table, so having the number of parents that didn't donate is a useful value as well.
+
+
+```{r}
+year = c(2009:2021)
+donated = c(35,42,39,37,38,35,32,19,22,20,17,34,28)
+total_parents = c(51,56,70,60,53,54,53,27,31,30,32,34,32)
+school_data = data.frame(year, donated, total_parents)
+school_data$no_donate = total_parents-donated
+
+school_data
+```
+
+#### 3a
+**Now, I'm going to do a chi squared test on the data.** I will feed a contingency table, comparing proportions of donated and no-donate parents each year.
+
+```{r}
+library(dplyr)
+
+chisq.test(select(school_data, donated, no_donate))
+
+```
+
+The results indicate that the proportions of parents donating are not the same each year. The p value is less than 0.01, so we reject the null hypothesis that proportions are independent from year.
+
+#### 3b
+**Is this to be done as one-tailed or two-tailed? Why? (Does a low Chi-square mean a departure from the expected proportions?)**
+
+The chi-square test is a one-tailed test. A particularly low chi square value reflects independence of groups; that is, each group behaves similarly as they would if all were sub-samples of a single population. Only large chi-square values indicate departure from the expected value under the assumption of independence.
+
+#### 3c
+Make the test focus more on the question at issue, and not waste effort on detecting whether there are differences that do not represent a long term trend.
+
+As a reminder, the question is whether parents burn out on donating over time. If this is the case, you might expect the proportion of donating parents to decrease over time.
+
+A very simple way to test this assumption is to split the classes in half. In our data, classes are listed by graduation year. Young students would be expected to have parents who donate at a higher rate than older students.
+
+In our data, classes are listed by year. High values represent young students, and low values represent old students. I will collapse the data into two rows - young and old. There are 13 years listed, so I will put 7 in the old group and 6 in the young group.
+
+```{r}
+group = c('old','young')
+
+donated.lumped = c(sum(school_data$donated[1:7]), sum(school_data$donated[8:13]))
+
+no_donate.lumped = c(sum(school_data$no_donate[1:7]), sum(school_data$no_donate[8:13]))
+
+school.lumped = data.frame(group, donated.lumped, no_donate.lumped)
+
+school.lumped
+
+chi.school.lumped = chisq.test(select(school.lumped, donated.lumped, no_donate.lumped))
+
+chi.school.lumped
+
+chi.school.lumped$residuals
+```
+
+The results indicate a p-value of 0.01. This indicates that both groups do not donate at the same rate.
+
+To see which group donates more than expected by indenpendence, and which group donates less, we can look at the residuals. The old group donates less than the young group, and less that would be expected by chance if they all donate at the same rate.
+
+#### 3d
+**What is the effect on the Chi-square test, on average, if some of the parents have two (or more) children in more than one grade, and thus are listed as donating (or not) in both of those grades on the basis of the same donation or the same non-donation?**
+
+The chi-square test is assumed to have indepenent observations, and having more than one child per parent violates this assumption.
+
+The chi-square test tests the null hypothesis that each group is sampled from the same population, and proportions are therefore independent of group. Having parents in more than one group moves the truth closer to this hypothesis; that is, group does not matter when it is the same parents. Therefore, intuitively, I would think that having parents with multiple children in different grades would artificially deflate the chi-square value and decrease the power of your test to find differences between grades.
+
+### Problem 4
+
+#### 4a
+** Generate two groups of observations, each with n = 5 form a standard normal distribution.**
+
+```{r}
+set.seed(100)
+
+group_1 = rnorm(5)
+group_2 = rnorm(5)
+
+group_1
+group_2
+```
+
+**Perform a t-test for a difference in location for these two groups, and record the p-value.**
+```{r}
+
+t.test(group_1,group_2)
+
+p.t = t.test(group_1,group_2)$p.value
+
+```
+
+**Now perform a Wilcoxon Rank-Sum test for a difference in location for these two groups and record the p-value.**
+
+```{r}
+
+wilcox.test(group_1,group_2)
+
+p.w = wilcox.test(group_1,group_2)$p.value
+
+```
+
+The two tests produced similar results, for two samples drawn from the same normally distributed population.
+
+#### 4b
+
+**Repeat this process 1,000 times.**
+First, I need to generate the samples to compare these two tests.  
+I will store the samples in a matrix. It will have 1,000 rows and 10 columns. The first five columns will represent group_1 and the second five columns will represent group_2.
+```{r}
+set.seed(10)
+
+big.matrix = 
+
+```
