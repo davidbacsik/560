@@ -2,7 +2,9 @@
 title: "PS_2"
 author: "David Bacsik"
 date: "April 22, 2018"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -394,7 +396,7 @@ p.w = wilcox.test(group_1,group_2)$p.value
 
 ```
 
-The two tests produced similar results, for two samples drawn from the same normally distributed population.
+The two tests produced similar results for two samples drawn from the same normally distributed population.
 
 #### 4b
 
@@ -402,8 +404,303 @@ The two tests produced similar results, for two samples drawn from the same norm
 First, I need to generate the samples to compare these two tests.  
 I will store the samples in a matrix. It will have 1,000 rows and 10 columns. The first five columns will represent group_1 and the second five columns will represent group_2.
 ```{r}
+set.seed(100)
+
+big.matrix.1 = replicate(1000, rnorm(5))
+big.matrix.2 = replicate(1000, rnorm(5))
+
+t_x = function(abc) {
+  t.test(x = big.matrix.1[,abc], y = big.matrix.2[,abc])$p.value
+}
+
+p_vals.t = lapply(1:1000, t_x)
+
+w_x = function(def) {
+  wilcox.test(x = big.matrix.1[,def], y = big.matrix.2[,def])$p.value
+}
+
+p_vals.w = lapply(1:1000, w_x)
+
+p_vals = data.frame(t=as.matrix(p_vals.t), w=as.matrix(p_vals.w))
+
+ggplot(p_vals, aes(x=unlist(t),y=unlist(w))) + geom_point()
+```
+
+**At a level of α = 0.05, how often do you reject the null hypothesis for each test? What can you conclude about the type 1 error rate of each test, given these results? Which test is more conservative and why?**
+
+```{r}
+p_vals.tl = p_vals$t < 0.05
+sum(p_vals.tl)
+
+p_vals.wl = p_vals.w < 0.05
+sum(p_vals.wl)
+```
+
+You reject the null hypothesis 45 times with the t test, and 30 times with the wilcoxan rank sum. Since all of these samples are drawn from the same random population, all of these rejections are type 1 errors. A type 1 error (rejecting the null hypothesis when it is true) occurs less often with a Wilcoxan than with a t-test. This means that the Wilcoxan is more conservative. Because you do not look at the magnitude of the difference between sample items--only their rank--you are less likely to be thrown off by randomly sampling a large difference in the mean, but you give up some power to detect differences in the mean if the populations are truly different.
+
+#### 4c
+First, I will make two samples of n=5 drawn from a random normal distribution. One population will have a mean of 0, while the other will have a mean of 1.
+
+```{r}
 set.seed(10)
 
-big.matrix = 
+group_1 = rnorm(5, mean=0)
+group_2 = rnorm(5, mean=1)
+
+group_1
+group_2
+```
+
+Then, I will perform both a t-test and a wilcoxan rank sum test and compare the p-value produced by each.
+
+```{r}
+t.test(group_1, group_2)
+
+wilcox.test(group_1, group_2)
 
 ```
+
+The p-value for the t.test is ~.14 while the p-value for the wilcoxan is ~.31. Both are making a type 2 error: failing to rejet the null hypothesis when it is false.
+
+Now, I will repeat this process 1000 times, and assess the rate of type 1 and type 2 errors for each test for this sample with a difference of means of 1.
+
+```{r}
+set.seed(3)
+
+big.matrix.1 = replicate(1000, rnorm(5, mean = 0))
+big.matrix.2 = replicate(1000, rnorm(5, mean = 1))
+
+t_x = function(abc) {
+  t.test(x = big.matrix.1[,abc], y = big.matrix.2[,abc])$p.value
+}
+
+p_vals.t = lapply(1:1000, t_x)
+
+w_x = function(def) {
+  wilcox.test(x = big.matrix.1[,def], y = big.matrix.2[,def])$p.value
+}
+
+p_vals.w = lapply(1:1000, w_x)
+
+p_vals = data.frame(t=as.matrix(p_vals.t), w=as.matrix(p_vals.w))
+
+ggplot(p_vals, aes(x=unlist(t),y=unlist(w))) + geom_point()
+
+p_vals.tl = p_vals$t < 0.05
+sum(p_vals.tl)
+
+p_vals.wl = p_vals.w < 0.05
+sum(p_vals.wl)
+
+```
+
+The t-test rejects the null hypothesis 264 times, while the wilcoxan rejects the null hypothesis only 208 times. Both of these numbers are much greater than the 50 that would be expected by chance with a t-test. Because these samples are drawn from populations with a difference of means of 1, these rejections are accurate. Failing to reject the null represents a type 2 error. The t-test performed fewer type 2 errors, because it can take into account the magnitude of the sample items. The wilcoxan, which can only take into account their rank, has less power to detect the differences between these populations.
+
+Now, I will repeat this process with a few different effect sizes (0, 1, 5) and a few different sample sizes (5, 50), and plot the results.
+
+```{r}
+set.seed(3)
+
+big_test = function(s, m) {
+  big.matrix.1 = replicate(1000, rnorm(s, mean = 0))
+  big.matrix.2 = replicate(1000, rnorm(s, mean = m))
+  
+  t_x = function(abc) {
+    t.test(x = big.matrix.1[,abc], y = big.matrix.2[,abc])$p.value
+  }
+  
+  p_vals.t = lapply(1:1000, t_x)
+  
+  w_x = function(def) {
+    wilcox.test(x = big.matrix.1[,def], y = big.matrix.2[,def])$p.value
+  }
+  
+  p_vals.w = lapply(1:1000, w_x)
+  
+  p_vals = data.frame(t=as.matrix(p_vals.t), w=as.matrix(p_vals.w))
+  
+  p_vals.tl = p_vals$t < 0.05
+  p_vals.tls = sum(p_vals.tl)
+  
+  p_vals.wl = p_vals.w < 0.05
+  p_vals.wls = sum(p_vals.wl)
+  
+  return(c(p_vals.tls, p_vals.wls))
+}
+
+big_test(5, 0)
+big_test(50, 0)
+
+big_test(5, 1)
+big_test(50, 1)
+
+big_test(5, 5)
+big_test(50, 5)
+
+```
+
+As sample size rises, for two samples drawn from the same population, the t-test is not affected. The wilcoxan makes more type 1 errors.
+
+For two samples drawn from populations with different means, increasing sample size provides more power to both tests to detect this real difference in means. Likewise, as the difference between the means gets larger, both tests are able to reject the null hypothesis more often. For a difference of means of 5, both tests reject the null hypothesis every time, even with a small sample size of n=5.
+
+#### 4d
+
+Now, I will examine these tests on two samples. Both will have a mean of 0, but one will have a standard deviation of 1, and one will have a standard deviation of 3 (sd is the square root of variance).
+
+```{r}
+set.seed(10)
+
+group_1 = rnorm(5, sd=1)
+group_2 = rnorm(5, sd=3)
+
+group_1
+group_2
+
+t.test(group_1, group_2, var.equal=FALSE)
+
+t.test(group_1, group_2, var.equal=TRUE)
+
+wilcox.test(group_1, group_2)
+```
+
+Both tests do not reject the null, which is correct in this case. It is interesting to note that the p-value for the t-test is higher than it was was when the samples were both drawn from populations with the same variance; however, the wilcoxan's p-value is unchanged.
+
+Providing the assumption that both populations have the same variance (which is not true in our case) makes the p-value lower for these samples. This makes sense intuitively, as you are providing an assumption and gaining power to detect real differences; you are also increasing the chance of type 1 error when you violate that assumption.
+
+Now I will repeat this 1000 times and assess the rates of type 1 error and power.
+
+```{r}
+set.seed(320)
+
+big.matrix.1 = replicate(1000, rnorm(5, sd = 1))
+big.matrix.2 = replicate(1000, rnorm(5, sd = 3))
+
+t_x = function(abc) {
+  t.test(x = big.matrix.1[,abc], y = big.matrix.2[,abc], var.equal=FALSE)$p.value
+}
+
+p_vals.t = lapply(1:1000, t_x)
+
+w_x = function(def) {
+  wilcox.test(x = big.matrix.1[,def], y = big.matrix.2[,def])$p.value
+}
+
+p_vals.w = lapply(1:1000, w_x)
+
+p_vals = data.frame(t=as.matrix(p_vals.t), w=as.matrix(p_vals.w))
+
+p_vals.tl = p_vals$t < 0.05
+sum(p_vals.tl)
+
+p_vals.wl = p_vals.w < 0.05
+sum(p_vals.wl)
+
+print('Example p-values, unequal variance:')
+p_vals.t[1:5]
+
+```
+The t-test produces type 1 errors more often than the wilcoxan here. It is less robust to increases in variance. This makes sense, as increasing variance affects magnitude of differences between sample items, but not rank.
+
+
+
+```{r}
+t_x_t = function(abc) {
+  t.test(x = big.matrix.1[,abc], y = big.matrix.2[,abc], var.equal=TRUE)$p.value
+}
+
+p_vals.t = lapply(1:1000, t_x_t)
+
+p_vals.tl = p_vals$t < 0.05
+sum(p_vals.tl)
+
+print('Example p-values, equal variance assumed:')
+p_vals.t[1:5]
+```
+
+Changing the t-test to assume that variances were equal did not result in any more type 1 errors; the number of the times we rejected the null hypothesis was the same. However, if you examine the p-values for each t-test, the p-values for the equal variances assumption are lower in each case.
+
+I am surprised, because I would assume that by chance, you would occassionaly see a p-value which is above 0.05 in the unequal variance assumption dip below 0.05 in the equal variance assumption. However, after testing a handful of seeds, I do not see this effect.
+
+### Problem 5
+**Imagine you have collected two groups of observations, one with n = 3 and one with n = 4 from some populations with unknown distributions. You want to test for a difference in location of these two distributions, so you perform a Wilcoxon Rank Sum test. Assume that there are no ties in your observations.**
+
+#### 5a
+**What is the minimum p-value you could possibly obtain with this test?**
+
+There are 7 total observations, so 7 total ranks. There are two samples. There are [7 choose 2], or 21 different ways to order these observations. That means the minimum p-value obtainable is 1/21, or ~0.048.
+
+**What is the maximum p-value you could possibly obtain with this test?**
+
+The maximum p-value obtainable is 1. If you had your most extreme Tx value, all possible permutations of observations would fall at or below that value. This would occur when there is no overalp in the values of the groups, such that all of one group is ranked above all of the other group.
+
+#### 5b
+Ties are given mid rank. **What happens to the test statistic distribution when a tie is present?**  
+Intuitively, ties are given the same rank. This means that the sum of ranks for multiple permutations of the data will be the same. This means that the Tx distribution will be narrowed.
+
+For large N, the test statistic distribution can be modeled approximately as the normal distribution. **If we used this approximation for a WRST with ties present, how should we adjust the normal approximation of the test statistic distribution to account for the ties?**
+
+We should decrease our standard deviation for the normal approximation, to account for the decreased dispersion observed when ties are present. I'm not sure how to calculate the value that we should decrease standard deviation by.
+
+### Problem 6
+#### 6a
+**Write a function in R to calculate TW RS the Wilcoxon Rank Sum test statistic.**
+
+The function takes in two lists, which are groups of values. It ranks these as a pool, then calculates the sum of ranks for group a. It returns this sum as the test statistic.
+
+```{r}
+diy.wilcox = function(a, b) {
+  value = c(a, b)
+  group = c(rep('a', length(a)), rep('b', length(b)))
+  rnk = rank(value)
+  
+  results = data.frame(value, group, rnk)
+  
+  x_group = results[which(group=='a'), ]
+  tx = sum(x_group$rnk)
+  
+  return(tx)
+  
+}
+
+diy.wilcox(c(220,310,12,13),c(1030,230,20))
+
+```
+
+#### 6b
+
+Now, I want to enable the function to return the p-value of the Wilcoxan Rank Sum test. Since the test statistic is a sum, it should be normally distributed and I will use a normal approximation. The two-sided p-value will be the probability that two samples drawn from the same population would have that large of a test statistic by chance.
+
+First, I will add a flag to my function to indicate whether I want the test statistic ('t') or the p-value ('p').
+
+```{r}
+diy.wilcox = function(a, b, f) {
+  value = c(a, b)
+  group = c(rep('a', length(a)), rep('b', length(b)))
+  rnk = rank(value)
+  
+  results = data.frame(value, group, rnk)
+  
+  x_group = results[which(group=='a'), ]
+  tx = sum(x_group$rnk)
+  
+  center = (length(a)*(length(a) + length(b) + 1))/2 # Formulas from reference (https://www.stat.auckland.ac.nz/~wild/ChanceEnc/Ch10.wilcoxon.pdf)
+  
+  var = sqrt((length(a)*length(b)*(length(a) + length(b) + 1))/12) # Formulas from reference
+  
+  z = (tx-center)/var
+  
+  p = 2 * pnorm(z)
+  
+  if(f == 't') {return(tx)}
+  
+  if(f == 'p') {return(p)}
+  
+}
+
+diy.wilcox(c(1,2,3,4,5),c(100,200,300,400,500),'p')
+
+wilcox.test(c(1,2,3,4,5),c(100,200,300,400,500))
+
+```
+
+Comparing my function to the built in r function, the results are similar. The difference may be due to my use of the normal approximation on a small sample.

@@ -1,0 +1,44 @@
+---
+title: "560 Lecture 10 - Bootstrap and Power"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+## Power Analysis in R
+
+#### First, let's get the "pwr" package.  Pwr contains power functions for most parametric tests.
+```{r}
+install.packages("pwr")
+library(pwr)
+```
+
+#### Use pwr.t.test to find the power of a two sided, two-sample t-test assuming an effect size of 0.5 (50% increase/decrease), an alpha of 0.05 and an n of 5.
+```{r}
+pwr.t.test(n = 5, d = 0.5, sig.level = 0.05, type = "two.sample", alternative = "two.sided")
+```
+
+#### Now, make a power/sample size, power/alpha and power/effect size curves.
+```{r}
+
+```
+
+#### Next, use an empirical approach to derive the power of the Wilcoxon Rank Sum for data from two random normal distributions, one with a mean of 0 and another with a mean of 1.  Try sample sizes ranging from 5 to 50 and use a critical value of 0.05.  Repeat 1,000 times for each sample size and measure power.
+```{r}
+
+```
+
+#### Now use an empirical approach to derive the power of the t-test for the same set of distributions.
+```{r}
+
+```
+
+#### As we saw in class, the WRST is nearly as powerful as the t-test, even when the assumptions of the t-test are met.

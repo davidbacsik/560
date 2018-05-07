@@ -1,0 +1,107 @@
+---
+title: "560 Lecture 9 - Resampling"
+author: "Douglas M. Fowler"
+date: "3/26/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+## Sample Randomization Test
+
+#### As a first example, let's examine the difference in mean outcome in a dominant model for a single SNP
+
+#### First, we make up some "true" data.  We're going to make use of a different type of formalism than we've used before.  Here, the carrier vector is binary and specifies whether each subject either is or is not a carrier of the SNP.  The null.y and alt.y vectors give the outcome (let's say it's the expression of an associated transcript) for each subject.
+```{r}
+carrier = rep(c(0,1), c(100,200))
+null.y = rnorm(300)
+```
+
+#### Note that rnorm() will take a vector of means - the random value returned for the ith element will be drawn from a normal distribution with the ith mean.  Here, the first 100 values will be drawn from a normal with a mean of zero whereas the next 200 will be drawn from a normal with a mean of 0.5.
+```{r}
+alt.y = rnorm(300, mean=carrier/2)
+```
+
+#### Just for the sake of comparison, deploy the appropriate parametric test for the difference in means.  You can use the "~" operator.  y~x is interpreted as "y is modeled as a function of x"
+```{r}
+t.test(null.y~carrier, var.equal=TRUE)
+t.test(alt.y~carrier, var.equal=TRUE)
+```
+
+#### Now, define test statistics for randomization tests for the null and alternate distributions 
+```{r}
+
+```
+
+#### Generate 1000 random test statistics from the data.  
+```{r}
+
+```
+
+#### Plot your results and compare p-values for each distribution.
+```{r}
+
+```
+
+#### How do the t-tests and randomization tests compare.  Are the results consistent with your expectations?
+
+## Bootstrap Variance and CIs
+
+#### The bootstrap can be used to obtain the variance of a test statistic.  As you know, you can set CIs using the normal distribution and an estimate of the variance of a test statistic.  We'll explore when this method of bootstrapping a CI is appropriate.
+
+#### Let's say we wish to set a 95% CI on the mean of our alternate hypothesis distribution (alt.y) from above.  First, create a boostrapped distribution of the mean.
+```{r}
+
+```
+
+#### Next, find the variance of the boostrapped values without using the var() function.  Compare your results to var().
+```{r}
+
+```
+
+#### Now, calculate 95% CIs for the sample mean using this value and make a histogram showing where they fall.
+```{r}
+
+```
+
+#### Next, compare this to the percentile method for 95% CIs we learned during lecture
+```{r}
+
+```
+
+#### Pretty close, as you can see.  Now let's repeat on a skewed distribution.  
+
+#### First, we make up some skewed data.
+```{r}
+skewed.data = rexp(15, 0.1)
+```
+
+#### Next, create a boostrapped distribution of the mean.
+```{r}
+
+```
+
+#### Next, find the variance of the boostrapped values without using the var() function.  Compare your results to var().
+```{r}
+
+```
+
+#### Now, calculate 95% CIs for the sample mean using this value and make a histogram showing where they fall.
+```{r}
+
+```
+
+#### Next, compare this to the percentile method for 95% CIs we learned during lecture
+```{r}
+
+```
+
+#### As you can see, the two methods produce very different results on a skewed distribution.  The percentile method is preferred in this case.
