@@ -1,0 +1,35 @@
+---
+title: "Problem Set #3"
+output: html_notebook
+---
+
+# 560
+# Problem Set ##
+
+## Due Date: Thursday, May 10
+### David Bacsik
+
+### Problem 1
+In homework 2, you were investigating the de novo mutation rate of R. Waterstonii.
+In a given generation, you observed the following mutation counts in 12 different
+isolates:
+
+```{r}
+mutations = c(12,15,10,4,6,15,18,12,7,11,5,14)
+
+mutation_data = data.frame(mutations)
+
+mutation_data
+
+```
+
+#### 1a
+**Obtain 1,000 bootstrap samples from your data and recompute λ' for these bootstrap examples.**
+
+```{r}
+library(boot)
+
+lambda_estimates = boot(mutation_data, statistic = mean, R=1000)
+
+lambda_estimates
+```

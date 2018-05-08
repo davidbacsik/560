@@ -1,0 +1,104 @@
+---
+title: "560 Lecture 13 - Maximum Likelihood Estimation"
+author: "Su-In Lee"
+date: "5/9/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This exercise uses a population genetics problem as an example of
+maximum likelihood estimation (MLE). It will also serve as some
+familiarization with how you write functions of variables in R.
+
+## Revisiting a brief primer on user-defined functions in R.  
+Functions are part of a program/script that perform a specific action but are not, in themselves, a complete program/script.  They take parameters/arguments, do something with them and then return the result.  They can be thought of as a way of organizing/modularizing code.  In R, they take the general form:
+
+myfunction <- function(arg1, arg2, ...){
+  statments
+  return(object)
+}
+
+Note -- generally you put statements inside the curly braces that define
+the body of the function, and these statements are separated by semicolons.
+The last one can be  return(...) which passes whatever is inside back to the R shell/running script. 
+
+Here is a simple example:
+
+```{r}
+  add2numbers <- function(num1, num2){
+    sum = num1 + num2
+    return(sum)
+  }
+
+add2numbers(1, 2)
+```
+
+Functions can be nested, that is, functions can call other functions. Here is an example:
+
+```{r}
+  plot.sum <- function(num1, num2) {
+    values = c(num1, num2, add2numbers(num1, num2))
+    barplot(values, names.arg= c("num1", "num2", "sum"))
+  }
+
+plot.sum(1, 5)
+```
+
+
+## The Helitosis Example
+Halitosis, colloquially called bad breath, is a symptom in which a noticeably unpleasant odor is present on the exhaled breath. Halitosis is partly genetically determined. The genotype aa has a 40% chance of getting the disease, and the other two possible genotypes, AA and Aa, each has a 10% chance of getting the disease. We want to estimate the frequency of the A allele.
+
+If the gene frequency of the  A  allele is p,  and that of a is 1-p,
+then the frequency of the disease is expected to be (if the genotypes
+are in Hardy-Weinberg proportions as a result of random mating):
+  
+  $F   =   p^2 \times (0.1) + 2p(1-p) \times (0.1) + (1-p)^2 \times (0.4)$
+
+Now suppose we observe 1000 individuals and find that the 182 of them have the disease.
+Using a binomial distribution, the probability that 182 out of 1000
+have the disease is the binomial class probability for 182 out of 1000
+when the probability of the event is F (which is a function of p).  This is
+
+$\frac{1000!}{182!~818!} F^{182} (1-F)^{818}$
+
+we want to maximize this by varying  p.  Now, try to write a function LL, the log-likelihood for p.  
+
+Hint: It may be easier to write a function for F that returns the Hardy-Weinberg proportion of people with the disease first and then write a second function LL that calls F.  When you have the function, see if you can find the maximum.
+
+
+### Define the functions needed.
+```{r}
+freq.halitosis <- function(p){
+  return( 0.1*p^2+0.1*2*p*(1-p)+0.4*(1-p)^2 )
+}
+
+ll.halitosis <- function(f){
+  return( 182 * log(f) + 818 * log(1-f) )
+}
+```
+
+### Plot the log-likelihood function as a function of p
+```{r}
+p <- seq(0, 1, 0.001)
+ll <- ll.halitosis( freq.halitosis( p ) )
+plot (p, ll, xlim=range(0:1), xlab = "allele frequence p", ylab="log-likelihood")
+grid(10,10)
+```
+
+### Find the MLE.
+```{r}
+which.max (ll)
+p[which.max (ll)]
+```
+
+### Add a straight line to indicate the MLE.
+```{r}
+plot (p, ll, xlim=range(0:1), xlab = "allele frequence p", ylab="log-likelihood")
+grid(10,10)
+abline(v= p[which.max (ll)])
+abline(v= p[which.max (ll)], col ="red")
+```
+
