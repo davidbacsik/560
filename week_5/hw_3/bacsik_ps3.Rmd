@@ -2,6 +2,9 @@
 title: "Problem Set #3"
 output: html_notebook
 ---
+```{r}
+library(ggplot2)
+```
 
 # 560
 # Problem Set ##
@@ -26,10 +29,78 @@ mutation_data
 #### 1a
 **Obtain 1,000 bootstrap samples from your data and recompute λ' for these bootstrap examples.**
 
+I will use the boot package to randomly resample this data 1000 times. Each time, I will compute lambda as the mean of the sample. The resulting distribtuion is:
 ```{r}
 library(boot)
 
-lambda_estimates = boot(mutation_data, statistic = mean, R=1000)
+set.seed(1)
 
-lambda_estimates
+samplemean = function(x, d) {
+  return(mean(x[d]))
+}
+
+lambda_ests = boot(data = mutation_data$mutations, statistic = samplemean, R = 1000)
+
+lambda_ests.vals = data.frame(t = lambda_ests$t[1:1000])
+
+ggplot(lambda_ests.vals, aes(x=t)) + geom_bar() +
+   labs(title="Lambda estimate", subtitle='1000 bootstrap samplings', y="count", x = "lambda")
+```
+
+#### 1b
+**Compute the variance of λ'.**
+
+```{r}
+var(lambda_ests$t[1:1000])
+```
+
+#### 1c
+**Generate a 95% confidence interval for λ' using the normal approximation method.**
+The lambda estimates should be approximatley normally distributed, because they are a stastic calculated over many random samples.
+
+The edges of the 95% confidence interval of the normal approximation of this distribution are:
+
+```{r}
+m = mean(lambda_ests$t[1:1000])
+v = var(lambda_ests$t[1:1000])
+
+qnorm(0.025, mean = m, sd = sqrt(v))
+qnorm((1-0.025), mean = m, sd = sqrt(v))
+```
+
+#### 1d QUESTION
+**Generate a 95% confidence interval for λ' using the percentile method.**
+
+I want to find the values that lie, within our statistic distribution, at the edge of the 95% confidence interval.
+
+Does this make use of the sign test, as is outlined in lecture 7? Or is it simply the 25th (0.025%) and 975th (97.5%) term in the ordered list of the lambda estimates? This second value is much closer to the normal distribution, which is what I would expect for a resampling that is sufficiently large.
+
+```{r}
+lambda_ests.sorted = sort(lambda_ests$t[1:1000])
+
+pbinom(468, 1000, prob=0.5)
+
+lambda_ests.sorted[468]
+lambda_ests.sorted[(1000-468+1)]
+
+lambda_ests.sorted[25]
+lambda_ests.sorted[(1000-25+1)]
+
+```
+
+#### 1e QUESTION
+**Compare the results from c and d. Which do you prefer, and why?**
+
+In this case, I prefer the percentile approach. While the values are similar between the normal approximation and percentile approach, since the percential approach was computationally trivial, I prefer to use values that are present in the bootstrap set to describe the bootstrap set, rather than the inferred values of the normal distribution.
+
+### 2
+You are studying the effect of a new enzyme on the number of PCR cycles required for a reaction. You split each of your 16 samples into two and perform the reactions with the old and new enzymes. The following table summarizes your data on the number of cycles required for each pair of reactions using the old and new enzymes:
+
+```{r}
+old = c(7,5,7,7,10,12,5,13,11,9,9,8,8,13,6,10)
+new = c(6,8,8,2,9,9,7,7,4,7,8,7,7,11,8,6)
+
+enzyme_data = data.frame(old, new)
+
+enzyme_data
 ```
