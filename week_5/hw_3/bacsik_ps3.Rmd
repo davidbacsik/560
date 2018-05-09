@@ -1,6 +1,8 @@
 ---
-title: "Problem Set #3"
-output: html_notebook
+title: 'Problem Set #3'
+output:
+  html_document:
+    df_print: paged
 ---
 ```{r}
 library(ggplot2)
@@ -43,7 +45,7 @@ lambda_ests = boot(data = mutation_data$mutations, statistic = samplemean, R = 1
 
 lambda_ests.vals = data.frame(t = lambda_ests$t[1:1000])
 
-ggplot(lambda_ests.vals, aes(x=t)) + geom_bar() +
+ggplot(lambda_ests.vals, aes(x=t)) + geom_histogram() +
    labs(title="Lambda estimate", subtitle='1000 bootstrap samplings', y="count", x = "lambda")
 ```
 
@@ -104,3 +106,111 @@ enzyme_data = data.frame(old, new)
 
 enzyme_data
 ```
+
+### Approach A: Paired T-Test
+#### 2A - a
+**Briefly describe (in words) your strategy. Why did you choose this approach?**
+
+These data are paired. Each observation is from a single sample tested with two different conditions (old vs new enzyme). I will use a paired t-test to evaluate whether the conditions affect the observations.
+
+#### 2A - b
+**What are the null and alterative hypotheses for this test**
+
+The null hypothesis for this test is that the mean difference between pairs is 0. The alternative hypothesis is that the mean difference between pairs is not 0.
+
+#### 2A - c
+**What assumptions does your approach make? Are they all satisfied? How do you know?**
+
+*The data are continuous; this is true, assuming we know our measurment technique allows continous observations.
+*Each (paired) observation is independent; this is also true, assuming we know our sampling method is not biased.
+*The data are approximately normally distributed; by eye, this is true for the 'new' data, and it is unclear whether it is true for the 'old' data. 
+
+```{r}
+old_plot = ggplot(enzyme_data, aes(x=old)) + geom_bar()
+new_plot = ggplot(enzyme_data, aes(x=new)) + geom_bar()
+
+old_plot
+new_plot
+```
+
+#### 2A - d
+**What is the p-value from your analysis?**
+
+```{r}
+paired_enzyme_test = t.test(enzyme_data$old, enzyme_data$new, paired = TRUE)
+
+paired_enzyme_test$p.value
+```
+
+#### 2A - e
+**What do you conclude (be precise about the conclusion)?**
+
+Because the p value is less than 0.05, I conclude that the mean of differences between the pairs is not 0. Because our experimental design only changed the enzyme in the reaction, we can infer causality. I infer that changing the enzyme produced a difference in the number of cycles required for each pair of reactions. Because this was a two-sided test, I cannot conclude the direction or magnitude of the difference, only that a difference is present.
+
+### Approach B: Wilcoxan Signed Rank Test
+#### 2B - a
+**Briefly describe (in words) your strategy. Why did you choose this approach?**
+These data are paired. Each observation is from a single sample tested with two different conditions (old vs new enzyme). In the previous approach, paired t-test, I found that the data are not clearly normally distributed. Now, I will use a non-parametric test, the Wilcoxon Signed Rank Test, which does not require normally distributed data to be valid.
+
+#### 2B - b
+**What are the null and alterative hypotheses for this test**
+The null hypothesis is that the populations the two samples are drawn from have the same median. The alternative hypothesis is that they are drawn from populations with different medians.
+
+#### 2B - c
+**What assumptions does your approach make? Are they all satisfied? How do you know?**
+
+*The data are continuous; this is true, assuming we know our measurment technique allows continous observations.
+*Each (paired) observation is independent; this is also true, assuming we know our sampling method is not biased.
+*The data have a symmmetric distribution; this is true for both 'old' and 'new' data sets.
+
+#### 2B - d
+**What is the p-value from your analysis?**
+
+```{r}
+paired_enzyme_wilcoxtest = wilcox.test(enzyme_data$old, enzyme_data$new, paired = TRUE)
+
+paired_enzyme_wilcoxtest$p.value
+```
+
+#### 2B - e
+**What do you conclude (be precise about the conclusion)?**
+The p-value given for the non-parametric test is 0.06, which is above the common threshold of 0.05. This test is less powerful than the t-test. However, this tests assumptions were met, while it is not clear that the t-test's assumptions were met.
+
+Given this value, I would think it is likely that the medians of the populations the old and new data are drawn from are different; because we know the experimental design, we can say that the median number of cycles needed to complete the reaction with the new enzyme is likely different from the median number needed to complete the reaction with the old enzyme. However, I would not be very confident in this conclusion.
+
+### 3
+#### 3a QUESTION
+**After your yearly checkup, the doctor has bad news and good news. The bad news is that you tested positive for a serious disease, and that the test is 99% accurate (i.e. the probability of testing positive given that you have the disease is 0.99, as is the probability of testing negative given that you don’t have the disease). The good news is that this is a rare disease, striking only 1 in 10,000 people. Why is it good news that the disease is rare? What are the chances that you actually have the disease?**
+
+Given that you tested positive, the chance that you actually have the disease depends on the accuracy of the test (a more specific test increases the chance that you have the disease) and the chance that you have the disease in the absence of testing (the background rate of the disease). Since the background rate is very low, even though you tested positive on the test, it is still overwhelmingly likely that you DO NOT have the disease:
+
+A = you have the disease  
+B = you tested positive
+
+\begin{equation*}
+P(A|B) = \frac{P(B|A)P(A)}{P(B)}
+\end{equation*}
+
+In the absence of testing, P(A) is = 1/10,000.  
+Since the test is 99% sensitive, P(B|A) is 0.99.  
+Since the test is 99% specific, and the disease is very rare, P(B) (in the absence of a condition) is about 0.01. (IS THIS RIGHT? QUESTION)
+
+Therefore, the chance that you actually have the disease, now that you test positive is:
+\begin{equation*}
+P(A|B) = \frac{0.99 * 0.0001}{0.01} = 0.0099
+\end{equation*}
+
+This is about 100X higher than baseline, but it is still >99% likely that you DO NOT have the disease.
+
+#### 3b QUESTION
+**Prove the conditionalized version of the general product rule:**
+\begin{equation*}
+P(A,B|E) = P(A|B, E)P(B|E)
+\end{equation*}
+
+
+**Prove the conditionalized version of Bayes’ rule:**
+\begin{equation*}
+P(A|B, E) = \frac{P(B|A, E)P(A|E)}{P(B|E)}
+\end{equation*}
+
