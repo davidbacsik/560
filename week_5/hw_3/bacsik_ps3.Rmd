@@ -187,30 +187,66 @@ Given that you tested positive, the chance that you actually have the disease de
 A = you have the disease  
 B = you tested positive
 
-\begin{equation*}
+\[
 P(A|B) = \frac{P(B|A)P(A)}{P(B)}
-\end{equation*}
+\]
 
 In the absence of testing, P(A) is = 1/10,000.  
 Since the test is 99% sensitive, P(B|A) is 0.99.  
 Since the test is 99% specific, and the disease is very rare, P(B) (in the absence of a condition) is about 0.01. (IS THIS RIGHT? QUESTION)
 
 Therefore, the chance that you actually have the disease, now that you test positive is:
-\begin{equation*}
+\[
 P(A|B) = \frac{0.99 * 0.0001}{0.01} = 0.0099
-\end{equation*}
+\]
 
 This is about 100X higher than baseline, but it is still >99% likely that you DO NOT have the disease.
 
 #### 3b QUESTION
 **Prove the conditionalized version of the general product rule:**
-\begin{equation*}
+\[
 P(A,B|E) = P(A|B, E)P(B|E)
-\end{equation*}
+\]
 
 
 **Prove the conditionalized version of Bayes’ rule:**
-\begin{equation*}
+\[
 P(A|B, E) = \frac{P(B|A, E)P(A|E)}{P(B|E)}
-\end{equation*}
+\]
 
+### 4
+**Say that you developed a potential Nobel prize worthy method of counting spontaneous deleterious mutations. You applied it to ten individuals and obtained the following data:**
+
+```{r}
+deleterious_muts = c(4,3,0,1,9,2,3,8,0,6)
+
+human_muts = data.frame(deleterious_muts)
+
+human_muts
+```
+
+#### 4a
+**Write out the likelihood function for this data.** (Hint: we discussed in lecture #3 the probability distribution that this type of data follows.)
+
+This data is spontaneous mutations per person, which is a rate. Rates follow a poission distribution, which is described the equation:
+
+\[
+P(X = i) = e^{-\lambda} \frac{\lambda^i}{i!}
+\]
+
+The function has only one parameter, \lambda. For estimating likelihood, we will use \theta.
+The likelihood of the parameter, \theta, is given by the probability of observing the data with that parameter:
+
+\[
+L(\theta : D) = P(D|\theta)
+\]
+
+In our case, the probability of seeing each specific number (i) of deleterious mutations is P(X = i), and the joint probability of the data is just the product of each individual observation.
+
+To generatize the likelihood function, there will a term with \[e^{-\theta}\] raised to the n (the number of observations in the dataset):  
+\[(e^{-\theta})^{n}\]
+
+There will also be a term with \theta raised to the sum of all mutations (i) observed:  
+\[\theta^{\sum_{i=1}^{n} i}\]
+
+Finally, there will be a term of \[\frac{1}{i1! \cdot i2! \cdot i3! ... in! }\].
