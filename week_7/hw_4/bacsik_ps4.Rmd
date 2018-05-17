@@ -1,0 +1,86 @@
+---
+title: "Problem Set 4"
+author: "David Bacsik"
+date: "May 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(ggplot2)
+```
+
+
+# Problem Set #4
+# Due Date: Thursday, May 24th
+
+### Problem 1
+![](models.png)
+
+Variables and values: 
+G80: Gal80 Expression, Val(G80) = {g80^0^, g80^1^}
+G4: Gal4 Expression, Val(G4) = {g4^0^, g4^1^}
+G2: Gal2 Expression, Val(G2) = {g2^0^, g2^1^}
+
+#### 1a
+**Model 1 and Model 2 have different Bayesian network structures, and so they have different sets of parameters (θ). List all parameters and the CPTs in each of Model 1 and Model 2.**
+
+Model 1:  
+$\theta_1$ = {G80, G4|G80, G2|G4}
+
+**CPT(Gal80):  **
+
+| g80^0^ | g80^1^ |
+| --------------- | --------------- |
+| P(g80^0^)  | P(g80^1^)  |
+
+**CPT(Gal4):  **
+
+|   | g4^0^ | g4^1^ |
+|---| --------------- | --------------- |
+| **g80^0^** | P(g4^0^\|g80^0^)  | P(g4^1^\|g80^0^)  |
+| **g80^1^** | P(g4^0^\|g80^1^)  | P(g4^1^\|g80^1^)  |
+
+**CPT(Gal2):  **
+
+|   | g2^0^ | g2^1^ |
+|---| --------------- | --------------- |
+| **g4^0^** | P(g2^0^\|g4^0^)  | P(g2^1^\|g4^0^)  |
+| **g4^1^** | P(g2^0^\|g4^1^)  | P(g2^1^\|g4^1^)  |
+
+Model 2:  
+$\theta_2$ = {G80, G4, G2|G80,G4}
+
+**CPT(Gal80):  **
+
+| g80^0^ | g80^1^ |
+| --------------- | --------------- |
+| P(g80^0^)  | P(g80^1^)  |
+
+**CPT(Gal4):  **
+
+| g4^0^ | g4^1^ |
+| --------------- | --------------- |
+| P(g4^0^)  | P(g4^1^)  |
+
+**CPT(Gal2):  **
+
+|                                      | g2^0^                   | g2^1^ |
+|------------                         | ---------------                   | --------------- |
+| **g80^0^, g4^0^** | P(g2^0^\|g80^0^, g4^0^)  | P(g2^1^\|g80^0^, g4^0^)  |
+| **g80^0^, g4^1^** | P(g2^0^\|g80^0^, g4^1^)  | P(g2^1^\|g80^0^, g4^1^)  |
+| **g80^1^, g4^0^** | P(g2^0^\|g80^1^, g4^0^)  | P(g2^1^\|g80^1^, g4^0^)  |
+| **g80^1^, g4^1^** | P(g2^0^\|g80^1^, g4^1^)  | P(g2^1^\|g80^1^, g4^1^)  |
+
+#### 1b
+**Say that we are given the gene expression data D measuring binary expression levels of the 3 genes (Gal80, Gal4 and Gal2) across 112 samples. Write down the likelihood function L(D|θ) for Model 1 and Model 2.**
+
+L($\theta$ : D) = P(D|$\theta$)
+
+Model 1: QUESTION
+$\theta_1$ = {G80, G4|G80, G2|G4}
+L~1~($\theta$ : D) =
+
+Not totally sure how to think about this. All parameters are binary. For the first parameter, G80, it is simply just p, the probility of high expression.  
+For the second parameter, G4, the conditoinal probability table has four entries: the probability of high expression given high and low G80 expression. Same with G2. What mathematical statement models those probabilities? And what's a good nomenclature to differentiate between p~G80~ and p~4|G80=low~, etc...

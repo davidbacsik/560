@@ -1,0 +1,153 @@
+---
+title: "560 Lecture 15 - Linear Regression"
+author: "Su-In Lee"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Simulation study
+
+Let's begin with a simulation study where we know the truth
+
+```{r}
+set.seed(1)
+X1 <- rnorm(100,mean=10,sd=5)  # 100 random normal quantities, one variable
+X2 <- rnorm(100,mean=-3,sd=4)  # another 100 with a different mean and variance
+```
+
+Now we calculate observations -- a linear combination of these, plus more noise
+
+```{r}
+Y <- 1.1 + 0.02*X1 + 0.3*X2 + rnorm(100,mean=0,sd=3)   # note it mostly depends on X2
+```
+
+#### Method I
+
+Maybe try plotting the Y against X1, against X2?
+```{r}
+master_data.1 = data.frame(X1, X2, Y)
+
+library(ggplot2)
+
+x1.plot = ggplot(master_data.1, aes(x=X1, y=Y)) + geom_point()
+x2.plot = ggplot(master_data.1, aes(x=X2, y=Y)) + geom_point()
+
+x1.plot
+x2.plot
+
+```
+
+X1 looks like all noise. X2 has the beginning of a linear structure, but it's not super clear by eye.
+
+Now we see whether we can find the truth:
+
+```{r}
+X <- cbind(X1,X2)        # X1, X2, side-by-side become columns of "design matrix"
+rr <- lsfit(X,Y)         
+ls.print(rr)             # what did it conclude?  Was there a nonzero slope in X1?
+```
+Yes, X1 had a nonzero slope, but it wasn't significant, so we're not confident in that call.
+X2 clearly is driving this model, both by magnitude and by p-value.
+
+
+How could you set up X's so as to do (say) a quadratic regression such as
+Y = a X^2 + b X + c using the multiple regression machinery?
+
+Hint: Make up the right fake variables.   One is X1, one is X1^2
+Try it.
+
+Here we make up simulated data again:
+
+```{r}
+Y <- 1.1 + 0.12*X1 - 0.3*X1^2 + rnorm(100,mean=0,sd=3)  # a quadratic with noise
+```
+
+Can you plot Y versus X1?  Figure out how to do a multiple regression on X1 and X1^2?
+
+```{r}
+master_data.1 = data.frame(X1, Y)
+
+library(ggplot2)
+
+x1.plot = ggplot(master_data.1, aes(x=X1, y=Y)) + geom_point()
+
+x1.plot
+
+```
+Now X1 is clearly structured. As it increases, y decreases. This gets more dramatic at upper values of X1.
+
+```{r}
+X.sq = X1^2
+X <- cbind(X1,X.sq)        # X1, X2, side-by-side become columns of "design matrix"
+rr <- lsfit(X,Y)         
+ls.print(rr)     
+```
+
+I did linear regression, and the model seems to fit the data well (R-Sqaure = 0.99). It's not intuitive to me at first how you can produce this graph with a linear coefficient for X^2, but I guess the squared part is just in the equation/term, not in the coefficient.
+
+#### Method II
+
+```{r}
+fit <- lm( Y ~ X1 + X2 )
+summary(fit)		# show results	
+```
+
+Other useful functions:
+
+```{r}
+coefficients(fit) # model coefficients
+fitted(fit) # predicted values
+residuals(fit) # residuals
+anova(fit) # anova table 
+```
+
+Diagnostic plots
+
+```{r}
+layout(matrix(c(1,2,3,4),2,2)) # optional 4 graphs/page 
+plot(fit)
+```
+
+### Real data experiment
+
+```{r}
+a <- read.table("https://www.cs.washington.edu/homes/suinlee/genome560/data/cats.txt")  
+```
+
+```{r}
+X <- a[1:17,2]               # X is the ages (in days) of sampling for that cat
+X
+# (you could use some other cat)
+Y <- a[1:17,3]               # Y is the fraction of cells of that cell type
+Y
+```
+
+Task 1. Plot Y versus X.  
+```{r}
+cat.1 = data.frame(X,Y)
+cat.1
+
+cat.1.plot = ggplot(cat.1, aes(x=X,y=Y)) + geom_point()
+
+cat.1.plot
+```
+
+Task 2. "rr" contains results of a Least Squares fit
+```{r}
+rr <- lsfit(cat.1$X,cat.1$Y)         
+ls.print(rr)    
+```
+  
+Task 3. Add the least squares fit line to the plot, in red. (Hint: Use abline.)
+```{r}
+cat.1.plot = cat.1.plot + geom_abline(slope=-0.3031, intercept=51.6283)
+
+cat.1.plot
+```
+
+Task 4. A new plot of the residuals versus X.  
+```{r}
+```
