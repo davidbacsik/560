@@ -29,7 +29,7 @@ mutation_data
 ```
 
 #### 1a
-**Obtain 1,000 bootstrap samples from your data and recompute λ' for these bootstrap examples.**
+**Obtain 1,000 bootstrap samples from your data and recompute λ* for these bootstrap examples.**
 
 I will use the boot package to randomly resample this data 1000 times. Each time, I will compute lambda as the mean of the sample. The resulting distribtuion is:
 ```{r}
@@ -45,19 +45,21 @@ lambda_ests = boot(data = mutation_data$mutations, statistic = samplemean, R = 1
 
 lambda_ests.vals = data.frame(t = lambda_ests$t[1:1000])
 
+print(mean(lambda_ests.vals$t))
+
 ggplot(lambda_ests.vals, aes(x=t)) + geom_histogram() +
    labs(title="Lambda estimate", subtitle='1000 bootstrap samplings', y="count", x = "lambda")
 ```
 
 #### 1b
-**Compute the variance of λ'.**
+**Compute the variance of λ*.**
 
 ```{r}
 var(lambda_ests$t[1:1000])
 ```
 
 #### 1c
-**Generate a 95% confidence interval for λ' using the normal approximation method.**
+**Generate a 95% confidence interval for λ* using the normal approximation method.**
 The lambda estimates should be approximatley normally distributed, because they are a stastic calculated over many random samples.
 
 The edges of the 95% confidence interval of the normal approximation of this distribution are:
@@ -70,27 +72,22 @@ qnorm(0.025, mean = m, sd = sqrt(v))
 qnorm((1-0.025), mean = m, sd = sqrt(v))
 ```
 
-#### 1d QUESTION
-**Generate a 95% confidence interval for λ' using the percentile method.**
+#### 1d
+**Generate a 95% confidence interval for λ* using the percentile method.**
 
 I want to find the values that lie, within our statistic distribution, at the edge of the 95% confidence interval.
 
-Does this make use of the sign test, as is outlined in lecture 7? Or is it simply the 25th (0.025%) and 975th (97.5%) term in the ordered list of the lambda estimates? This second value is much closer to the normal distribution, which is what I would expect for a resampling that is sufficiently large.
+This is simply the 25th (0.025%) and 975th (97.5%) term in the ordered list of the 1000 lambda estimates.
 
 ```{r}
 lambda_ests.sorted = sort(lambda_ests$t[1:1000])
 
-pbinom(468, 1000, prob=0.5)
-
-lambda_ests.sorted[468]
-lambda_ests.sorted[(1000-468+1)]
-
 lambda_ests.sorted[25]
-lambda_ests.sorted[(1000-25+1)]
+lambda_ests.sorted[(1000-25)]
 
 ```
 
-#### 1e QUESTION
+#### 1e
 **Compare the results from c and d. Which do you prefer, and why?**
 
 In this case, I prefer the percentile approach. While the values are similar between the normal approximation and percentile approach, since the percential approach was computationally trivial, I prefer to use values that are present in the bootstrap set to describe the bootstrap set, rather than the inferred values of the normal distribution.
@@ -121,9 +118,9 @@ The null hypothesis for this test is that the mean difference between pairs is 0
 #### 2A - c
 **What assumptions does your approach make? Are they all satisfied? How do you know?**
 
-*The data are continuous; this is true, assuming we know our measurment technique allows continous observations.
-*Each (paired) observation is independent; this is also true, assuming we know our sampling method is not biased.
-*The data are approximately normally distributed; by eye, this is true for the 'new' data, and it is unclear whether it is true for the 'old' data. 
+-The data are continuous; this is true, assuming we know our measurment technique allows continous observations.  
+-Each (paired) observation is independent; this is also true, assuming we know our sampling method is not biased.  
+-The data are approximately normally distributed; by eye, this is true for the 'new' data, and it is unclear whether it is true for the 'old' data.   
 
 ```{r}
 old_plot = ggplot(enzyme_data, aes(x=old)) + geom_bar()
@@ -159,9 +156,9 @@ The null hypothesis is that the populations the two samples are drawn from have 
 #### 2B - c
 **What assumptions does your approach make? Are they all satisfied? How do you know?**
 
-*The data are continuous; this is true, assuming we know our measurment technique allows continous observations.
-*Each (paired) observation is independent; this is also true, assuming we know our sampling method is not biased.
-*The data have a symmmetric distribution; this is true for both 'old' and 'new' data sets.
+-The data are continuous; this is true, assuming we know our measurment technique allows continous observations.  
+-Each (paired) observation is independent; this is also true, assuming we know our sampling method is not biased.  
+-The data have a symmmetric distribution; this is true for both 'old' and 'new' data sets.  
 
 #### 2B - d
 **What is the p-value from your analysis?**
@@ -179,7 +176,7 @@ The p-value given for the non-parametric test is 0.06, which is above the common
 Given this value, I would think it is likely that the medians of the populations the old and new data are drawn from are different; because we know the experimental design, we can say that the median number of cycles needed to complete the reaction with the new enzyme is likely different from the median number needed to complete the reaction with the old enzyme. However, I would not be very confident in this conclusion.
 
 ### 3
-#### 3a QUESTION
+#### 3a
 **After your yearly checkup, the doctor has bad news and good news. The bad news is that you tested positive for a serious disease, and that the test is 99% accurate (i.e. the probability of testing positive given that you have the disease is 0.99, as is the probability of testing negative given that you don’t have the disease). The good news is that this is a rare disease, striking only 1 in 10,000 people. Why is it good news that the disease is rare? What are the chances that you actually have the disease?**
 
 Given that you tested positive, the chance that you actually have the disease depends on the accuracy of the test (a more specific test increases the chance that you have the disease) and the chance that you have the disease in the absence of testing (the background rate of the disease). Since the background rate is very low, even though you tested positive on the test, it is still overwhelmingly likely that you DO NOT have the disease:
@@ -193,26 +190,32 @@ P(A|B) = \frac{P(B|A)P(A)}{P(B)}
 
 In the absence of testing, P(A) is = 1/10,000.  
 Since the test is 99% sensitive, P(B|A) is 0.99.  
-Since the test is 99% specific, and the disease is very rare, P(B) (in the absence of a condition) is about 0.01. (IS THIS RIGHT? QUESTION)
+P(B) is calculated as the probability that you test positive given that you have the disease--P(B|A)--times the probability that you have the disease--P(A)--plus the probability that you test positive given that you don't have the disease--P(B|not A)--times the probability that you don't have the disease--P(not A):
+\[
+P(B) = P(B|A) \cdot P(A) + P(B|not A) \cdot P(not A)
+\]
+
+The probability that you don't have the disease--P(not A)--is 1-(1/10,000), or 9,999/10,000. The probability that you test positive for the test given that you don't have the disease--P(B|not A)--is 1-0.99 (specificity), or 0.01.
+
+Finally, we can calculate P(B):
+
+\[
+P(B) = 0.99 \cdot \frac{1}{10,000} + 0.01 \cdot \frac{9,999}{10,000} = 0.010098
+\]
 
 Therefore, the chance that you actually have the disease, now that you test positive is:
 \[
-P(A|B) = \frac{0.99 * 0.0001}{0.01} = 0.0099
+P(A|B) = \frac{0.99 * 0.0001}{0.010098} = 0.0098
 \]
 
 This is about 100X higher than baseline, but it is still >99% likely that you DO NOT have the disease.
 
-#### 3b QUESTION
+#### 3b
 **Prove the conditionalized version of the general product rule:**
-\[
-P(A,B|E) = P(A|B, E)P(B|E)
-\]
-
+![](db1a.png)
 
 **Prove the conditionalized version of Bayes’ rule:**
-\[
-P(A|B, E) = \frac{P(B|A, E)P(A|E)}{P(B|E)}
-\]
+![](db2a.png)
 
 ### 4
 **Say that you developed a potential Nobel prize worthy method of counting spontaneous deleterious mutations. You applied it to ten individuals and obtained the following data:**
@@ -234,8 +237,8 @@ This data is spontaneous mutations per person, which is a rate. Rates follow a p
 P(X = i) = e^{-\lambda} \frac{\lambda^i}{i!}
 \]
 
-The function has only one parameter, \lambda. For estimating likelihood, we will use \theta.
-The likelihood of the parameter, \theta, is given by the probability of observing the data with that parameter:
+The function has only one parameter, $\lambda$. For estimating likelihood, we will use $\theta$.
+The likelihood of the parameter, $\theta$, is given by the probability of observing the data with that parameter:
 
 \[
 L(\theta : D) = P(D|\theta)
@@ -243,10 +246,135 @@ L(\theta : D) = P(D|\theta)
 
 In our case, the probability of seeing each specific number (i) of deleterious mutations is P(X = i), and the joint probability of the data is just the product of each individual observation.
 
-To generatize the likelihood function, there will a term with \[e^{-\theta}\] raised to the n (the number of observations in the dataset):  
+*To generatize the likelihood function,* there will a term with $e^{-\theta}$ raised to n (the number of observations in the dataset):  
 \[(e^{-\theta})^{n}\]
 
-There will also be a term with \theta raised to the sum of all mutations (i) observed:  
-\[\theta^{\sum_{i=1}^{n} i}\]
+There will also be a term with $\theta$ raised to the sum of all mutations (i) observed:  
+\[\theta^{\sum_{i_1}^{i_n} i}\]
 
-Finally, there will be a term of \[\frac{1}{i1! \cdot i2! \cdot i3! ... in! }\].
+Finally, we will capture the factorial for each observation. This will be a term of \[\frac{1}{i_1! \cdot i_2! \cdot i_3! ... i_n! }\]
+
+All together, the likelihood function will be:
+\[
+L(\theta : D) = P(D|\theta) = (e^{-\theta})^{n} \cdot \theta^{\sum_{i_1}^{i_n} i} \cdot \frac{1}{i_1! \cdot i_2! \cdot i_3! ... i_n! }
+\]
+
+In the case of our data, n = 10, the sum of all observations is 36, and the factorial term can be calculated.
+
+\[
+L(\theta : D) = P(D|\theta) = (e^{-\theta})^{10} \cdot \theta^{\sum_{i_1}^{i_n}i} \cdot \frac{1}{i_1! \cdot i_2! \cdot i_3! ... i_n! }
+\]
+
+\[
+L(\theta : D) = P(D|\theta) = (e^{-\theta})^{10} \cdot \theta^{36} \cdot \frac{1}{4! \cdot 3! \cdot 0! ... 6! }
+\]
+
+\[
+L(\theta : D) = P(D|\theta) = (e^{-\theta})^{10} \cdot \theta^{36} \cdot \frac{1}{18203705081856000}
+\]
+
+#### 4b
+**Calculate the MLE of the average number of spontaneous deleterious mutations per individual from the data above. You can do this in any of the three ways that we discussed in class (graphically, numerically or calculus).**
+
+I will do this graphically. First, I will define an r function ('l.likelihood') that calculates the log likelihood of observing our datset, based on the value of theta:
+
+```{r}
+l.likelihood = function(t){
+  return(log((exp(-t)^10)*(t^36)*(1/18203705081856000)))
+}
+
+```
+
+Then, I will plot the likelihood for a range of parameter values. Since all of our data have values less than 10, I will plot the values from 0 to 50; you cannot have less than 0 spontaneous mutations.
+
+```{r}
+param.vals = seq(0, 50, 0.01)
+ll.ests = data.frame(param.vals, likelihood = l.likelihood(param.vals))
+
+ll.plot = ggplot(data = ll.ests, aes(x=param.vals, y=likelihood)) + geom_point() +
+   labs(title="Maximum Likelihood Estimation", y="log likelihood", x = "average spontanenous mutations per genome")
+
+ll.plot
+```
+
+From this plot, it is clear that the maximum likelihood falls somewhere around (but below) 5 mutations per genome. We can use a bit of r to find the mutation rate where the max of the plot falls:
+
+```{r}
+max(ll.ests$likelihood)
+
+which.max(ll.ests$likelihood)
+
+ll.ests$param.vals[which.max(ll.ests$likelihood)]
+```
+
+From this, I find a maximum likelhood estimate of 3.6.
+
+#### 4c
+**Plot the log-likelihood of the data as a function of the parameter.**
+
+See plot (above).
+
+### 5
+**You are interested in the transcriptional changes during early stages of the innate immune response. You obtain lymphoblast cell lines from 10 individuals and for each one measure expression levels at baseline (untreated) and following treatment with the drug immiquimod (which is a TLR8 agonist). The following table shows gene expression levels for a particular transcript.**
+
+```{r}
+
+baseline = c(-0.24,0.25,1.12,-0.06,0.46,0.17,0.02,1.10,0.55,0.98)
+stimulated = c(1.74,2.1,1.65,2.65,3.11,2.31,1.87,3.21,2.19,1.75)
+
+lympho_data = data.frame(baseline, stimulated)
+
+lympho_data
+
+```
+
+#### 5a
+**Perform a one sample t-test to test the hypothesis that baseline expression levels are significantly different than zero. Clearly state the null and alternative hypotheses and submit R code, test statistic value and p-value.**
+
+The null hypothesis is that the mean of the baseline values is equal to zero. The alternative hypothesis is that the mean is not equal to zero.
+
+```{r}
+baseline_zero = t.test(lympho_data$baseline, mu = 0)
+
+baseline_zero$statistic
+
+baseline_zero$p.value
+```
+
+The t statistic is 2.78. The p-value is 0.02. If I wanted to take a conservative interpretation, I could set my cutoff at 0.01. Since 0.02 in not less than 0.01, I would not reject the null hypothesis.
+
+#### 5b
+**Use a paired t-test to test the hypothesis that gene expression levels are significantly different between baseline and stimulated conditions. Again, clearly state the null and alternative hypotheses and submit R code, test statistic value and p-value.**
+
+The null hypothesis is that the mean difference between pairs is 0. The alternative is that the mean difference between pairs is not 0.
+
+```{r}
+stim_base = t.test(lympho_data$baseline, lympho_data$stimulated, paired=TRUE)
+
+stim_base$statistic
+
+stim_base$p.value
+```
+
+The test statistic is -8.158317 and the p-value is 1.89 e-5. This is much less than 0.01, so I reject the null hypothesis and conclude that the mean difference between pairs is not 0.
+
+#### 5c
+**Formally, let x_i and y_i denote the expression level for the i − th individual in baseline and stimulated conditions, respectively. Then define z_i = y_i − x_i. Perform a one sample t-test on the vector of z_i values. Clearly state the null and alternative hypotheses and submit R code, test statistic value, and p-value. How does your result compare to that obtained from part b?**
+
+```{r}
+
+lympho_data$diff = lympho_data$stimulated - lympho_data$baseline
+lympho_data
+```
+
+The null hypothesis is that the mean of the difference (lympho_data$diff) between each pair is 0. The alternative hypothesis is that it is not zero.
+
+```{r}
+diff_zero = t.test(lympho_data$diff, mu = 0)
+
+diff_zero$statistic
+
+diff_zero$p.value
+```
+
+The test statistic is 8.158317, which is the same value but the opposite sign as the paired t-test. The p-value is 1.89e-5, which is the same as the paired t-test; this is simply a matter of which value was subtracted. In this case, as well, I am confident in rejecting the null hypothesis that the mean difference between pairs is 0.

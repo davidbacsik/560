@@ -1,0 +1,55 @@
+---
+title: "560 Lecture 14 - Maximum a Posteriori Estimation"
+author: "Su-In Lee"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The goal of this exercise is to understand the impact of hyperparameters in the Bernoulli experiment we discussed in class.  We will compare the likelihood P(D|p) with the posterior P(p|D) for varying alpha and beta values. Since P(D) does not depend on p, we will ignore this term in the posterior P(p|D).
+
+#### Hint: here is how to generate a function in R:
+myfunction <- function(arg1, arg2, ...){
+  statments
+  return(object)
+}
+
+#### Hint: gamma function in R
+gamma(x)
+
+#### Let's first specify the values of nh and nt. Later, we will adjust these values and see how the mode of the likelihood function changes.
+
+```{r}
+nh <- 100
+nt <- 50
+```
+
+#### Let's specificy the hyperparameters (pseudo counts)
+```{r}
+alpha <- 1000
+beta <- 1000
+```
+
+#### Let's now define the functions for the likelihood and posteria.
+```{r}
+likelihood <- function(p, nh, nt){
+  return()
+}
+
+posterior <- function(p, nh, nt, alpha, beta){
+  return()
+}
+```
+
+#### Let's plot the log-likelihood function as a function of p for varing values of hyperparameters. For example, try the following as well.
+
+```{r}
+nh <- 100
+nt <- 50
+alpha <- 30
+beta <- 30
+```
+
+#### Describe the difference.
