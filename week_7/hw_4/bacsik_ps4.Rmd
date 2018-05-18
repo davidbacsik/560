@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(ggplot2)
 library(reshape2)
+library(gridExtra)
 ```
 
 
@@ -94,27 +95,168 @@ $L_2(\theta_2:D) = P(D|\theta_2) = \displaystyle\prod_{i=1}^{112} P(G80 = G80_i)
 **Download the binary expression data from https://sites.google.com/a/cs.washington.edu/genome560-spr18/disc-gal80-gal4-gal2.txt?attredirects=0&d=1, and implement the code that computes the log-likelihood function log (L) for Model 1 and Model 2.**
 
 ```{r}
-gal_data = read.csv('https://sites.google.com/a/cs.washington.edu/genome560-spr18/disc-gal80-gal4-gal2.txt?attredirects=0&d=1', sep='\t')
+
+gal_data = read.table('disc-gal80-gal4-gal2.txt', sep='\t', strip.white=TRUE, stringsAsFactors = TRUE)
 
 gal_data = t(gal_data)
 
 colnames(gal_data) = gal_data[1,]
 row.names(gal_data) = NULL
 
-gal_data = gal_data[-1,]
+gal_data = gal_data[-1,-1]
 
 gal_data = data.frame(gal_data)
 
-gal_data = sapply(gal_data, as.numeric)
+gal_data = lapply(gal_data, trimws)
 
+gal_data = lapply(gal_data, as.numeric)
+
+gal_data = data.frame(gal_data)
 ```
 
 ```{r}
-sum(gal_data$Gal80)
+gal80.cpt = prop.table(table(gal_data[c('Gal80')]))
+
+gal4.cpt = prop.table(table(gal_data[c('Gal4')]))
+
+gal4.gal80.cpt = prop.table(table(gal_data[c('Gal80','Gal4')]))
+
+gal2.gal4.cpt = prop.table(table(gal_data[c('Gal4','Gal2')]))
+
+gal2.gal4gal80.cpt = prop.table(table(gal_data[c('Gal80', 'Gal4', 'Gal2')]))
+
+term_prob_1 = function(x){
+  g80 = gal_data[x,]$Gal80
+  g4 = gal_data[x,]$Gal4
+  g2 = gal_data[x,]$Gal2
+  
+  p.g80 = as.numeric(gal80.cpt[as.character(g80)])
+  p.gal4.gal80 = as.numeric(gal4.gal80.cpt[as.character(g80),as.character(g4)])
+  p.gal2.gal4 = as.numeric(gal2.gal4.cpt[as.character(g4),as.character(g2)])
+  
+  joint = p.g80 * p.gal4.gal80 * p.gal2.gal4
+  return(joint)
+}
+
+term_prob_2 = function(x){
+  g80 = gal_data[x,]$Gal80
+  g4 = gal_data[x,]$Gal4
+  g2 = gal_data[x,]$Gal2
+  
+  p.g80 = as.numeric(gal80.cpt[as.character(g80)])
+  p.gal4 = as.numeric(gal4.cpt[as.character(g4)])
+  p.gal2.gal4gal80 = as.numeric(gal2.gal4gal80.cpt[as.character(g80), as.character(g4),as.character(g2)])
+  
+  joint = p.g80 * p.gal4* p.gal2.gal4gal80
+  return(joint)
+}
+
+prod_1 = 1
+prod_2 = 1
+for (i in  1:nrow(gal_data)){
+  j_1 = term_prob_1(i)
+  prod_1 = prod_1 * j_1
+  j_2 = term_prob_2(i)
+  prod_2 = prod_2 * j_2
+}
+
+print('log likelihood of model 1:')
+print(log(prod_1))
+
+print('log likelihood of model 2:')
+print(log(prod_2))
+
 ```
 
+#### 1e
+**Select between Model 1 and Model 2 based on the results in part (d).**
+
+The log likelihood of model 2 is greater (less negative). Therefore, I believe model 2 better reflects the data.
+
+### Problem 2
+**Here, we will continue the R exercise in Lecture #14. The goal of this exercise is to understand the impact of hyperparameters α and β in a Bernoulli experiment (e.g., Thumbtack example). We will do that by comparing the shape of the distribution between the likelihood P(D|p) and the posterior P(p|D). We assume that our prior belief is that we get the same number of heads and tails (i.e., p = 0.5).**
 
 ```{r}
+likelihood <- function(p, nh, nt){
+  l = p^nh * (1-p)^nt
+  return(l)
+}
 
+posterior = function(p, nh, nt, alpha, beta){
+  prior = dbeta(p, alpha, beta)
+  like = likelihood(p, nh, nt)
+  post = (1/prior)*like
+  return(post)
+}
 
 ```
+
+**Consider the following sets of nH, nT , α, and β. Plot the likelihood and posterior functions over varying p in [0, 1] and compare multiple plots. What are the MLE and MAP estimations of p in each case?**
+
+```{r}
+p = seq(0, 1, 0.001)
+
+likepost = function(p, nh, nt, alpha, beta){
+  likes = likelihood(p, nh, nt)
+  posts = posterior(p, nh, nt, alpha, beta)
+  
+  ld = data.frame(p, likes, posts)
+  ld
+  
+  max_like = p[which.max(likes)]
+  print('The maximum likelilhood estimate of p is:')
+  print(max_like)
+  
+  max_map = p[which.max(posts)]
+  print('The maximum posterior estimate of p is:')
+  print(max_map)
+  
+  plot_like = ggplot(ld, aes(x=p, y=likes)) + geom_point(col='seagreen3') + labs(x='p', y='likelihood')
+  plot_post = ggplot(ld, aes(x=p, y=posts)) + geom_point(col='deeppink3') + labs(x='p', y='posterior probability')
+  
+  grid.arrange(plot_like, plot_post, ncol=1)
+}
+
+```
+
+#### 1a
+**Say that nH = 100, nT = 50, α = 5, and β = 5**
+
+```{r}
+nh = 100
+nt = 50
+alpha = 5
+beta = 5
+
+likepost(p, nh, nt, alpha, beta)
+```
+
+#### 1b
+Say that nH = 100, nT = 50, α = 30, and β = 30. (Optional: Describe the difference of the results between (a) and (b) and the reason for the difference.)
+
+In this case, we are adding more pseudocounts, indicating a stronger prior. The beta distribution will still be symmetric, however, we will be imposing a stronger bias towards p in the posterior probability.
+
+```{r}
+nh = 100
+nt = 50
+alpha = 30
+beta = 30
+
+likepost(p, nh, nt, alpha, beta)
+```
+
+
+#### 1c
+Say that nH = 10, nT = 5, α = 30, and β = 30. (Optional: Describe the difference of the results between (b) and (c) and the reason for the difference.)
+
+Now, we have a really strong bias. The high beta (psuedocounts) are much larger relative to the observed data. So, our prior almost totally will drive the posterior probability distribution. The result is a very flat distrbituion, with little confidence in our estimated p.
+
+```{r}
+nh = 10
+nt = 5
+alpha = 30
+beta = 30
+
+likepost(p, nh, nt, alpha, beta)
+```
+

@@ -1,0 +1,21 @@
+---
+title: "Untitled"
+author: "David Bacsik"
+date: "May 17, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+gal_data = read.table('disc-gal80-gal4-gal2.txt', sep='\t')
+
+gal_data.t = t(gal_data)
+
+gal_data.df = data.frame(gal_data.t)
+
+colnames(gal_data.df) = gal_data.df[1,]
+```

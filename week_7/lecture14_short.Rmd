@@ -35,7 +35,8 @@ beta <- 1000
 #### Let's now define the functions for the likelihood and posteria.
 ```{r}
 likelihood <- function(p, nh, nt){
-  return()
+  l = p^nh * (1-p^nt)
+  return(l)
 }
 
 posterior <- function(p, nh, nt, alpha, beta){
