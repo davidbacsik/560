@@ -88,7 +88,7 @@ Model 1:
 $\theta_2$ = {G80, G4, G2|G80,G4}
 $L_2(\theta_2:D) = P(D|\theta_2) = \displaystyle\prod_{i=1}^{112} P(G80 = G80_i) \cdot P(G4 = G4_i) \cdot P(G2 = G2_i|G80_i, G4_i)$
 
-#### 1c
+#### 1c QUESTION
 **Write down the maximum likelihood estimation (MLE) solutions in Model 1 and Model 2.**
 
 #### 1d
@@ -234,7 +234,7 @@ likepost(p, nh, nt, alpha, beta)
 #### 1b
 Say that nH = 100, nT = 50, α = 30, and β = 30. (Optional: Describe the difference of the results between (a) and (b) and the reason for the difference.)
 
-In this case, we are adding more pseudocounts, indicating a stronger prior. The beta distribution will still be symmetric, however, we will be imposing a stronger bias towards p in the posterior probability.
+In this case, we are adding more pseudocounts, indicating a stronger prior.
 
 ```{r}
 nh = 100
@@ -249,7 +249,7 @@ likepost(p, nh, nt, alpha, beta)
 #### 1c
 Say that nH = 10, nT = 5, α = 30, and β = 30. (Optional: Describe the difference of the results between (b) and (c) and the reason for the difference.)
 
-Now, we have a really strong bias. The high beta (psuedocounts) are much larger relative to the observed data. So, our prior almost totally will drive the posterior probability distribution. The result is a very flat distrbituion, with little confidence in our estimated p.
+Now, we have a really strong prior. We still have a high beta and alpha value (psuedocounts). We have fewer observations in our data, making the absolute value of the likihood lower. So, our prior almost totally will drive the posterior probability distribution. In this case, the prior is that the number of counts will be very high, so the highest value in our data set gets the greatest confidence.
 
 ```{r}
 nh = 10
@@ -258,5 +258,157 @@ alpha = 30
 beta = 30
 
 likepost(p, nh, nt, alpha, beta)
+```
+
+
+### Problem 3
+**We are given the genotype and phenotype data from 334 mouse individuals. The genotype data measure binary genotype values of 1333 genetic markers for each mouse, and the phenotype data measure the normalized blood cholesterol levels. Given these data, we want to find the quantitative trait loci (QTLs) that contribute to elevated cholesterol level.**
+
+**We will perform a single predictor regression. This means that we will model the phenotype based on the linear regression model with only one marker . For each genetic marker j, we model the measurement of blood cholesterol level Y as a linear combination of an intercept term and the genotype value Xj : Y = β0 + βXj.**
+
+```{r}
+genotype = read.table('genotype.txt', sep='\t', strip.white=TRUE, stringsAsFactors = TRUE)
+
+genotype = t(genotype)
+
+colnames(genotype) = genotype[1,]
+row.names(genotype) = NULL
+
+genotype = genotype[-1,-1]
+
+genotype = data.frame(genotype)
+
+genotype = lapply(genotype, trimws)
+
+genotype = lapply(genotype, as.numeric)
+
+genotype = data.frame(genotype)
+
+phenotype = read.table('phenotype.txt', sep='\t', strip.white=TRUE, stringsAsFactors = TRUE)
+
+phenotype = t(phenotype)
+
+colnames(phenotype) = phenotype[1,]
+row.names(phenotype) = NULL
+
+phenotype = phenotype[-1,-1]
+
+phenotype = data.frame(phenotype)
+
+phenotype = lapply(phenotype, trimws)
+
+phenotype = lapply(phenotype, as.numeric)
+
+phenotype = data.frame(phenotype)
+
+chol_data = data.frame(genotype, phenotype)
+
+```
+
+#### 3a
+**Use “lsfit” or “lm” (Method II in R exercise of Lecture 15) to compute the β values. Implement a function that computes for each marker i, the squared error of prediction of Y by using the β values from a linear regression fit.**
+
+```{r}
+
+marker.sse = function(m){
+  if(m != 'phenotype'){
+    x = chol_data[[m]]
+    out = lm(chol_data$phenotype ~ x)
+    return(anova(out)[['Sum Sq']][2])
+  }
+  else{
+    return(NULL)
+  }
+}
+
+sse = sapply(names(chol_data), marker.sse)
+sse = unlist(sse)
+```
+
+**What is the minimum squared error (SSE) across all 1333 genetic markers? What is the marker that has the minimum squared error?**
+```{r}
+min(sse)
+
+sse[which.min(sse)]
+```
+
+#### 3b
+**What is the maximum SSE across all 1333 markers? What is the marker that has the maximum squared error?**
+```{r}
+max(sse)
+
+sse[which.max(sse)]
+```
+
+#### 3c
+**Compute the coefficient of determination (R2) for each of 1333 markers. Plot the R2 values (y-axis) across all 1333 markers (x-axis).**
+
+```{r}
+marker.r2 = function(m){
+  if(m != 'phenotype'){
+    x = chol_data[[m]]
+    out = lm(chol_data$phenotype ~ x)
+    return(summary(out)$r.squared)
+  }
+  else{
+    return(NULL)
+  }
+}
+
+r2 = sapply(names(chol_data), marker.r2)
+r2 = unlist(r2)
+
+r2_data = data.frame(r2)
+
+r2.plot = ggplot(r2_data, aes(x=1:length(row.names(r2_data)), y=r2)) + geom_point(color='navy') + labs(x='Marker Number', y='R^2')
+r2.plot
+```
+
+#### 3d
+**What is the R2 value of the marker you found in (a)? What is the R2 value of the marker you found in (b)?**
+
+In a, I found that the minimum squared error was found with Marker #847; its squared error was 287.3. This means the linear model for this marker fit the data the best, so difference between the prediction and the actual value (the error) was small. The R2 value for this marker is relatively high:
+```{r}
+r2[which.min(sse)]
+```
+
+In b, I found that the maximum squared error was found with Marker 598; its squared error was 328. This means the linear model for this marker fit the data the worst, so the difference between the prediction and the actual value was large. The R2 for this marker was low:
+```{r}
+r2[which.max(sse)]
+```
+
+#### 3e
+**Generate a scatter plot of Y and X (e.g., slides 19-22 in Lecture 15) and add a fitted linear regression line for each of the markers you found in (a) and (b). Descibe how they are different in terms of goodness of fit.**
+
+**Best Model: Marker #847**
+
+Marker 847 provided the best linear model of cholesterol.  
+```{r}
+m847 = lm(chol_data$phenotype ~ chol_data$Marker_847)
+
+summary(m847)
+```
+
+When plotting Marker 847 (x-axis) against cholesterol, you can see mice with Marker 847 tend to have higher cholesterol levels than mice without Marker 847. The line is positive, and runs through the center of these two clusters.
+```{r}
+p847 = ggplot(chol_data, aes(x=Marker_847, y=phenotype)) + geom_point(color='seagreen3') + labs(x='Marker 847 Status', y='Cholesterol') + geom_abline(slope = 0.82479, intercept = -0.19261, color='aquamarine4', size=1.5)
+p847
+
+```
+
+**Worst Model: Marker #598**
+
+Marker 598 provided the worst linear model of cholesterol.  
+```{r}
+m598 = lm(chol_data$phenotype ~ chol_data$Marker_598)
+
+summary(m598)
+```
+
+When plotting Marker 598 (x-axis) against cholesterol, you can see that it does not make a difference whether mice have Marker 598 or not; both sets of mice look like they are drawn from the same population, with a cholesterol around 0 (averaged against all samples). The line is flat and runs through the center of both clusters.
+```{r}
+p598 = ggplot(chol_data, aes(x=Marker_598, y=phenotype)) + geom_point(color='deeppink3') + labs(x='Marker 598 Status', y='Cholesterol') + geom_abline(slope = -2.142*(10^-5), intercept = 1.478*(10^-5), color='indianred4', size=1.5)
+p598
+
 ```
 
