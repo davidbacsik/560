@@ -1,0 +1,108 @@
+---
+title: "560 Lecture 20 - Multiple Hypothesis Testing"
+author: "Su-In Lee"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We are going to do 5,194 tests and plot their P values. This is for the data set of 
+Storey, Akey et al., the one called RMA_Filtered.txt. Then we're going to use 
+Storey's method to compute False Discovery Rates.
+
+The data consists of measurements of log gene expression for 5,194 loci for two 
+populations (European and African).  In each population they looked at 8 
+individuals and for each of them measured them twice.  We are going to simplify 
+things by pretending that these 16 values (for each population) are just 
+independent samples.   
+
+In a more complete analyses we would have to take the levels of individuals and 
+replicate measurements into account by an analysis of variance (or some such). 
+
+For this exercise we just use a t-test.
+
+The two populations each have 16 values.  These are the first 16 columns and the 
+next 16 columns. First we have to read in the data frame calling it (say) a:
+
+```{r}
+a <- read.table(header = T, file="http://www.cs.washington.edu/homes/suinlee/genome560/RMA_Filtered.txt")
+```
+
+(that makes sure the headings of columns are dealt with correctly.
+
+```{r}
+b <- a[,2:33]
+```
+
+This copies the numbers out into a 5194 by 32 matrix, with columns 1:32 of the new 
+matrix being the old columns 2:33 (so omitting the locus name)
+
+Now we make up a function "fun" of one argument which is needed to apply it to each 
+row of that matrix.  It returns the P-value for the two-sample  t-test: 
+
+```{r}
+fun <- function(d){return(t.test(d[1:16],d[17:32])$p.value)}
+```
+
+Do you see what it does to row  i  of matrix b?  Try typing "fun(b[10,])" or 
+whatever row you want, to just make sure it works and gets the P value for that row.
+
+Now we apply it to the rows of the matrix and get the P values in a vector
+
+```{r}
+p <- apply(b, 1, fun)
+
+length(p)
+```
+
+That may take a minute or two to run.
+Now  p  is the vector of  P values.
+
+To see what they look like, plot the histogram of the p's, using nclass=50 so you 
+can see where the 0.05 cutoff is (in case you want to use that).
+
+Choose a significance level alpha (maybe it would be 0.05, or 0.10, or whatever.  
+Call it alpha
+
+Find out how many there are:
+
+```{r}
+alpha = 0.05
+tabulate(as.numeric(p < alpha))       # tells you how many there are
+```
+
+Look at a histogram of  P values.  
+
+Now, we will apply multiple hypothesis testing 
+
+```{r}
+#p.adjust(p, method = p.adjust.methods, n = length(p))
+
+p.adjust.methods
+```
+
+Try
+
+```{r}
+padj <- p.adjust(p, "fdr")  #"holm" "BH"
+
+tabulate(as.numeric(padj < alpha) )
+
+par( mfrow = c(1,2) )
+hist( p, breaks = 50)
+hist( padj, breaks = 50)
+```
+Try different methods for multiple hypothesis testing
+
+```{r}
+padj2 <- p.adjust(p, "bonferroni" )
+
+tabulate(as.numeric(padj2 < alpha) )
+
+par( mfrow = c(1,3) )
+hist( p, breaks = 50)
+hist( padj, breaks = 50)
+hist( padj2, breaks = 50)
+```

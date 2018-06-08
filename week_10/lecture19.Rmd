@@ -1,0 +1,63 @@
+---
+title: "560 Lecture 19 - Two Way ANOVA"
+author: "Su-In Lee"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We are going to do a two-way analysis of variance (ANOVA). We use the "lm" 
+command which fits a "linear model" and then the "anova" command which presents 
+the analysis of variance table.
+
+In each case see if you can figure out what the ANOVA table means, 
+what tests what, and why the number of degrees of freedom is what it is.
+
+#### Case 1.
+
+Suppose we have two capsule types (C or V) and two digestive fluids 
+(Gastric or Duodenal). We randomly assign 5 capsules of each type 
+to each type of digesetive juice and observe dissolve time.
+We are going to do a two-way analysis of variance where there the 
+"rows" might be the type of digestive juice and the "columns" 
+capsule type (so a 2 x 2 table) with 5 data points in each cell.
+
+```{r}
+gg <- read.table(file="http://www.cs.washington.edu/homes/suinlee/genome560/data/dissolve.txt")      
+m1 <- lm(V4 ~ V2*V3, data=gg)    #  fit the linear model
+# Once again, it does not need factor(V2)
+# or factor(V3) as it can see they are not
+# numbers.  Or you could use "factor", e.g.:
+#m1 <- lm(V4 ~ factor(V2)+factor(V3)+factor(V2)*factor(V3), data=gg)
+anova(m1)    
+```
+
+
+#### Case 2.   
+
+Mannose phosphate isomerase enzyme had its enzyme activity measured in
+some fish of three genotypes and two sexes, in multiple
+fish of the same species.   (The genotypes ff, fs, and ss
+                             refer to the two alleles at the locus, which in old-fashioned
+                             protein electrophoresis were the "fast" and "slow" alleles
+                             which refers to where they move on the gel and not to enzyme
+                             activity).   We are going to do a two-way analysis of variance
+where there the "rows" might be the sexes and the "columns"
+genotypes (so a 2 x 3 table) with multiple data points in
+each cell.
+
+```{r}
+#hh <- read.table("mpi.txt")     #  again, take a look at it afterwards
+hh <- read.table(file="http://www.cs.washington.edu/homes/suinlee/genome560/data/mpi.txt")      
+
+m2 <- lm(V4 ~ V2*V3, data=hh)    #  fit the linear model
+# Once again, it does not need factor(V2)
+# or factor(V3) as it can see they are not
+# numbers.  Or you could use "factor", e.g.:
+#       m3 <- lm(V4 ~ factor(V2)+factor(V3)+factor(V2)*factor(V3), data=hh)
+anova(m2)                        # do sexes, genotypes matter?
+# what does an interaction mean?
+# what accounts for the degrees of freedom?
+```

@@ -1,0 +1,136 @@
+---
+title: "560 Lecture 17 - Ridge Regression"
+author: "Su-In Lee"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Let's first install a new R package called "MASS"
+
+```{r}
+#install.packages("MASS")
+```
+
+We will use the MASS library
+
+```{r}
+library(MASS)
+```
+
+
+### Simulation study
+
+#### Data generation
+
+Let's do a multiple regression on a simulated data
+
+```{r}
+X1 <- rnorm(50,mean=10,sd=5)  # 100 random normal quantities, one variable
+X2 <- rnorm(50,mean=-3,sd=4)  # another 100 with a different mean and variance
+X3 <- rnorm(50,mean=2,sd=2)  # another 100 with a different mean and variance
+
+X <- cbind(X1,X2,X3)
+```
+
+Now we calculate observations -- a linear combination of these, plus more noise
+
+```{r}
+Y <- 1.1 + 0.02*X1 + 0.3*X2 + 0.5*X3 + rnorm(50,mean=0,sd=3)   # note it mostly depends on X2
+```
+
+
+#### Ridge regression
+
+Now, I'll try ridge regression --- I'll give it a sequence of values for lambda, since it's not clear at this point what value to use.
+
+```{r}
+fitridge <- lm.ridge (Y ~ X1 + X2 + X3, lambda = seq(0, 20, 2))
+```
+
+or, we can create X by using cbind.
+
+```{r}
+X <- cbind(X1,X2,X3)
+lmridge2 <- lm.ridge (Y ~ X, lambda = seq(0, 20, 2))
+```
+
+Now, we will compute the generalized cross-validation errors.
+Each column corresponds to each lambda value.
+
+```{r}
+fitridge$GCV
+```
+
+You can get the coefficients for each lambda value.
+Each column corresponds to each lambda value.
+
+```{r}
+fitridge$coef
+```
+
+You can check that the L2 regularization term decreases as
+lambda value increases.
+
+```{r}
+colSums( (fitridge$coef)^2 )
+```
+
+```{r}
+#Ypred1 <- X %*% lmridge$coef[,1]
+#Ypred2 <- X %*% lmridge$coef[,2]
+
+#cbind(Ypred1,Y)
+#colSums
+```
+
+
+###	Real data experiment
+
+
+Read the table and make a data frame out of it
+
+```{r}
+a <- read.table(header = T, file="http://www.cs.washington.edu/homes/suinlee/genome560/data/mice.txt")  
+
+X <- as.matrix(a[,2:7])    # X is sex, weight, length, Triglyceride, Total Cholesterol, FFA
+                           # as.matrix is for 
+Y <- a[,8]                 # Y is the insulin level
+```
+
+You can see the pairwise correlation of 
+```{r}
+all <- cbind(X,Y)
+pairs(all)
+
+plot(X[,2], Y, ylim=c(0,max(Y)+0.2))  # plot Y versus X.  Could use "min" too
+
+#rr2 <- lsfit(X, Y)         # "rr" contains results of a Least Squares fit
+#ls.print(rr2)
+```
+
+Apply ridge regression
+```{r}
+lmridge <- lm.ridge (Y ~ X, lambda = seq(0, 20, 2))
+```
+
+Plot the CV error as a function of the lambda value 
+```{r}
+lmridge$GCV
+```
+
+Based on what we did on the simulated data, let's choose the lambda value that minimizes the CV error
+```{r}
+which.min(lmridge$GCV)
+```
+
+What are the coefficients for the optimal lambda you chose above?
+```{r}
+lmridge$coef[,6]
+```
+
+
+
+
+

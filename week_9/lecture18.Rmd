@@ -1,0 +1,69 @@
+---
+title: "560 Lecture 18 - One Way ANOVA"
+author: "Su-In Lee"
+output: html_document
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+We are going to do two one-way analysis of variance (ANOVA). We use the "lm" 
+command which fits a "linear model" and then the "anova" command which presents 
+the analysis of variance table.
+
+In each case see if you can figure out what the ANOVA table means, 
+what tests what, and why the number of degrees of freedom is what it is.
+
+
+#### Case 1.
+
+I have made a data frame called "example_ANOVA.txt" which you will find
+on the web site.  (It is artificial data).  Download it, save it to
+the folder (directory) in which you will be working for this exercise.
+
+It has three columns.  The first is the observation number.
+The second is the group number (grp), the third is the observation (x).
+These variable names are known to the program after the data frame is read in.
+
+Do a one-way ANOVA.  You need to read the table using
+the usual command
+
+```{r}
+ff <- read.table(file="http://www.cs.washington.edu/homes/suinlee/genome560/data/example_ANOVA.txt")      
+```
+
+and then use "lm" and "anova" commands:
+
+```{r}
+mm <- lm(x ~ factor(grp), data=ff)     # checks effect of variable "grp"
+# which is a "factor" (not a number)
+anova(mm)                        # reports the ANOVA table
+# Try to figure out the ANOVA table.
+mm                               # If you just print "mm" what does it show?
+```
+
+#### Case 2.
+
+These are (real) measurements of adductor muscle scar
+length on shells of mussels collected at a number of localities.
+A one-way ANOVA tests whether those localities differ.
+The numerical value of variable V1 is to be used as a "factor",
+so that it simply indicates group membership and is not
+a numerical value of interest.
+
+Read the data frame (and also be sure to take a look at it):
+
+```{r}
+gg <- read.table(file="http://www.cs.washington.edu/homes/suinlee/genome560/data/mussels.txt")      
+
+m2 <- lm(V2 ~ V1, data=gg)           # fit the linear model
+# It knows to use V1 as a "factor"
+# but you could use  V2 ~ factor(V1)  too
+anova(m2)                            # print the ANOVA table
+m2                                   # also the estimated effects
+```
+
+Do the localities differ?  What accounts for the degrees of freedom?
+Do we need to have equal numbers of data points in each group?
+
